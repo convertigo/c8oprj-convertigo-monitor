@@ -1,0 +1,449 @@
+comment: Returns a real-time snapshot of JVM threads and memory metrics.
+↓Init [steps.SimpleStep-1761312851919]: 
+  comment: Prepares JVM MXBeans and helpers shared by JSON steps.
+  expression: |
+    'var ManagementFactory = Packages.java.lang.management.ManagementFactory;
+    var runtimeMx = ManagementFactory.getRuntimeMXBean();
+    var threadMx = ManagementFactory.getThreadMXBean();
+    var memoryMx = ManagementFactory.getMemoryMXBean();
+    var runtime = Packages.java.lang.Runtime.getRuntime();
+    
+    function isoStringNow() {
+        var date = new Date();
+        if (date.toISOString) {
+            return date.toISOString();
+        }
+        function pad(number) {
+            return number < 10 ? ''0'' + number : '''' + number;
+        }
+        var millis = (''000'' + date.getUTCMilliseconds()).slice(-3);
+        return date.getUTCFullYear() + ''-'' + pad(date.getUTCMonth() + 1) + ''-'' + pad(date.getUTCDate()) +
+            ''T'' + pad(date.getUTCHours()) + '':'' + pad(date.getUTCMinutes()) + '':'' + pad(date.getUTCSeconds()) +
+            ''.'' + millis + ''Z'';
+    }
+    
+    var heapUsage = memoryMx.getHeapMemoryUsage();
+    var nonHeapUsage = memoryMx.getNonHeapMemoryUsage();
+    var deadlockedIdsArray = threadMx.findDeadlockedThreads();
+    var deadlockedIds = [];
+    if (deadlockedIdsArray != null) {
+        for (var i = 0; i < deadlockedIdsArray.length; i++) {
+            deadlockedIds.push(deadlockedIdsArray[i]);
+        }
+    }
+    var cpuTimeSupported = threadMx.isThreadCpuTimeSupported();
+    var cpuTimeEnabled = cpuTimeSupported ? threadMx.isThreadCpuTimeEnabled() : null;'
+↓metrics [steps.JsonObjectStep-1761312851921]: 
+  comment: Metrics root object exposed to the caller.
+  key: 
+    - xmlizable: 
+      - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+      - SmartType: 
+        - ↑mode: PLAIN
+        - →→: metrics
+  ↓timestamp [steps.JsonFieldStep-1761312851923]: 
+    comment: Snapshot timestamp in ISO-8601 UTC.
+    key: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: PLAIN
+          - →→: timestamp
+    value: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: JS
+          - →→: isoStringNow()
+  ↓uptime [steps.JsonObjectStep-1761312851925]: 
+    comment: Uptime metrics in milliseconds.
+    key: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: PLAIN
+          - →→: uptime
+    ↓uptimeMillis [steps.JsonFieldStep-1761312851927]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: millis
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: runtimeMx.getUptime()
+  ↓memory [steps.JsonObjectStep-1761312851929]: 
+    comment: Heap, non-heap, and runtime memory statistics.
+    key: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: PLAIN
+          - →→: memory
+    ↓heap [steps.JsonObjectStep-1761312851931]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: heap
+      ↓heapInitValue [steps.IfStep-1761312851933]: 
+        condition: heapUsage.getInit() >= 0
+        ↓heapInitNumber [steps.JsonFieldStep-1761312851935]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: init
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: heapUsage.getInit()
+      ↓heapInitNull [steps.IfStep-1761312851937]: 
+        condition: heapUsage.getInit() < 0
+        ↓heapInitNullField [steps.JsonFieldStep-1761312851939]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: init
+          type: nul
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: null
+      ↓heapUsed [steps.JsonFieldStep-1761312851941]: 
+        key: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: PLAIN
+              - →→: used
+        type: number
+        value: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: JS
+              - →→: heapUsage.getUsed()
+      ↓heapCommitted [steps.JsonFieldStep-1761312851943]: 
+        key: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: PLAIN
+              - →→: committed
+        type: number
+        value: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: JS
+              - →→: heapUsage.getCommitted()
+      ↓heapMaxValue [steps.IfStep-1761312851945]: 
+        condition: heapUsage.getMax() >= 0
+        ↓heapMaxNumber [steps.JsonFieldStep-1761312851947]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: max
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: heapUsage.getMax()
+      ↓heapMaxNull [steps.IfStep-1761312851949]: 
+        condition: heapUsage.getMax() < 0
+        ↓heapMaxNullField [steps.JsonFieldStep-1761312851951]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: max
+          type: nul
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: null
+    ↓nonHeap [steps.JsonObjectStep-1761312851953]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: nonHeap
+      ↓nonHeapInitValue [steps.IfStep-1761312851955]: 
+        condition: nonHeapUsage.getInit() >= 0
+        ↓nonHeapInitNumber [steps.JsonFieldStep-1761312851957]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: init
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: nonHeapUsage.getInit()
+      ↓nonHeapInitNull [steps.IfStep-1761312851959]: 
+        condition: nonHeapUsage.getInit() < 0
+        ↓nonHeapInitNullField [steps.JsonFieldStep-1761312851961]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: init
+          type: nul
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: null
+      ↓nonHeapUsed [steps.JsonFieldStep-1761312851963]: 
+        key: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: PLAIN
+              - →→: used
+        type: number
+        value: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: JS
+              - →→: nonHeapUsage.getUsed()
+      ↓nonHeapCommitted [steps.JsonFieldStep-1761312851965]: 
+        key: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: PLAIN
+              - →→: committed
+        type: number
+        value: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: JS
+              - →→: nonHeapUsage.getCommitted()
+      ↓nonHeapMaxValue [steps.IfStep-1761312851967]: 
+        condition: nonHeapUsage.getMax() >= 0
+        ↓nonHeapMaxNumber [steps.JsonFieldStep-1761312851969]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: max
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: nonHeapUsage.getMax()
+      ↓nonHeapMaxNull [steps.IfStep-1761312851971]: 
+        condition: nonHeapUsage.getMax() < 0
+        ↓nonHeapMaxNullField [steps.JsonFieldStep-1761312851973]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: max
+          type: nul
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: null
+    ↓runtimeMemory [steps.JsonObjectStep-1761312851975]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: runtime
+      ↓runtimeFree [steps.JsonFieldStep-1761312851977]: 
+        key: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: PLAIN
+              - →→: free
+        type: number
+        value: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: JS
+              - →→: runtime.freeMemory()
+      ↓runtimeTotal [steps.JsonFieldStep-1761312851979]: 
+        key: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: PLAIN
+              - →→: total
+        type: number
+        value: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: JS
+              - →→: runtime.totalMemory()
+      ↓runtimeMax [steps.JsonFieldStep-1761312851981]: 
+        key: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: PLAIN
+              - →→: max
+        type: number
+        value: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: JS
+              - →→: runtime.maxMemory()
+  ↓threads [steps.JsonObjectStep-1761312851983]: 
+    comment: Thread pool and CPU usage indicators.
+    key: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: PLAIN
+          - →→: threads
+    ↓threadCount [steps.JsonFieldStep-1761312851985]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: count
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: threadMx.getThreadCount()
+    ↓threadDaemon [steps.JsonFieldStep-1761312851987]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: daemon
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: threadMx.getDaemonThreadCount()
+    ↓threadPeak [steps.JsonFieldStep-1761312851989]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: peak
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: threadMx.getPeakThreadCount()
+    ↓threadTotalStarted [steps.JsonFieldStep-1761312851991]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: totalStarted
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: threadMx.getTotalStartedThreadCount()
+    ↓threadDeadlockedCount [steps.JsonFieldStep-1761312851993]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: deadlockedCount
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: deadlockedIds.length
+    ↓deadlockedIds [steps.JsonArrayStep-1761312851995]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: deadlockedIds
+      ↓deadlockedIterator [steps.SimpleIteratorStep-1761312851997]: 
+        expression: deadlockedIds
+        ↓deadlockedId [steps.JsonFieldStep-1761312851999]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: id
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: item
+    ↓cpuTimeEnabled [steps.JsonFieldStep-1761312852001]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: cpuTimeEnabled
+      type: bool
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: cpuTimeEnabled
