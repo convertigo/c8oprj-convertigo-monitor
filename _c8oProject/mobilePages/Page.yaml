@@ -54,6 +54,124 @@ title: First page
   beanData: '{"ionBean":"Content"}'
   comment: Page content
   tagName: ion-content
+  ↓TextItem [ngx.components.UIDynamicElement-1761322916480]: 
+    beanData: '{"ionBean":"TextItem"}'
+    tagName: ion-text
+    ↓Text [ngx.components.UIText-1761322916479]: 
+      textValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: plain:Memories
+  ↓UseSharedComponent [ngx.components.UIUseShared-1761315132024]: 
+    identifier: memory
+    sharedcomponent: libApexCharts.Application.NgxApp.apxChart
+    ↓chart [ngx.components.UIUseVariable-1761315225089]: 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: 'script:{type: ''area'',  height: 350, zoom: { enabled: true }}'
+    ↓annotations [ngx.components.UIUseVariable-1761315225091]: 
+      comment: |
+        Annotations in ApexCharts allows you to write custom text on specific data-points or on axes values.
+        For more information please visit [Series documentation](https://apexcharts.com/docs/annotations/) 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
+    ↓colors [ngx.components.UIUseVariable-1761315225093]: 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
+    ↓dataLabels [ngx.components.UIUseVariable-1761315225095]: 
+      comment: |
+        Data Labels are the actual values which are passed in the series. You can add formatters which will allow you to modify values before displaying.
+        For more information please visit [Series documentation](https://apexcharts.com/docs/datalabels/) 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
+    ↓series [ngx.components.UIUseVariable-1761315225097]: 
+      comment: |
+        The series is a set of data. You may have single or multiple data series.
+        For more information please visit [Series documentation](https://apexcharts.com/docs/series/) 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: source:{"filter":"Global","project":"ConvertigoMonitor","input":"","model":{"data":[{"sharedObject":"router.sharedObject"}],"path":"?.metricsSeries","prefix":"","suffix":"","custom":"","useCustom":false}}
+    ↓stroke [ngx.components.UIUseVariable-1761315225099]: 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
+    ↓labels [ngx.components.UIUseVariable-1761315225101]: 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
+    ↓legend [ngx.components.UIUseVariable-1761315225103]: 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
+    ↓fill [ngx.components.UIUseVariable-1761315225105]: 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
+    ↓tooltip [ngx.components.UIUseVariable-1761315225107]: 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
+    ↓plotOptions [ngx.components.UIUseVariable-1761315225109]: 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
+    ↓responsive [ngx.components.UIUseVariable-1761315225111]: 
+      comment: |
+        You can configure different options for different screen sizes and ApexCharts will override the configuration based on breakpoints defined.
+        For more information please visit [Series documentation](https://apexcharts.com/docs/responsive/) 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
+    ↓xaxis [ngx.components.UIUseVariable-1761315225113]: 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
+    ↓yaxis [ngx.components.UIUseVariable-1761315225115]: 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
+    ↓grid [ngx.components.UIUseVariable-1761315225117]: 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
+    ↓states [ngx.components.UIUseVariable-1761315225119]: 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
+    ↓title [ngx.components.UIUseVariable-1761315225121]: 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
+    ↓subtitle [ngx.components.UIUseVariable-1761315225123]: 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
+    ↓theme [ngx.components.UIUseVariable-1761315225125]: 
+      varValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+          - MobileSmartSourceType: script:null
 ↓Footer [ngx.components.UIDynamicElement-1491634242460]: 
   beanData: '{"ionBean":"Footer"}'
   comment: Page footer

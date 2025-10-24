@@ -280,6 +280,7 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
           '
 ↓AutoDarkTheme [ngx.components.UIStyle-1662391887098]: 
   comment: This will define the dark theme for the application. This will be selected if the device is in dark mode. You can disable this to disable automatic dark mode switching
+  isEnabled: false
   styleContent: 
     - xmlizable: 
       - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
@@ -451,3 +452,66 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
           /** Ionic CSS Variables **/
           
           
+↓AppEvent [ngx.components.UIAppEvent-1761315300432]: 
+  appEvent: onAppInit
+  ↓refreshMetrics [ngx.components.UIDynamicAction-1761315347342]: 
+    beanData: |
+      '{
+       "ionBean": "SetGlobalAction",
+       "Property": "plain:refreshMetrics",
+       "Value": "script:1000"
+      }'
+  ↓refreshThreads [ngx.components.UIDynamicAction-1761315379693]: 
+    beanData: |
+      '{
+       "ionBean": "SetGlobalAction",
+       "Property": "plain:refreshThreads",
+       "Value": "script:5000"
+      }'
+  ↓metricsSeries [ngx.components.UIDynamicAction-1761315467608]: 
+    beanData: |
+      '{
+       "ionBean": "SetGlobalAction",
+       "Property": "plain:metricsSeries",
+       "Value": "script:[]"
+      }'
+    ↓refreshMetrics [ngx.components.UIDynamicAction-1761315856805]: 
+      beanData: '{"ionBean":"PublishEventAction","topic":"plain:refreshMetrics"}'
+↓refreshMetrics [ngx.components.UIEventSubscriber-1761315571120]: 
+  topic: refreshMetrics
+  ↓callMetrics [ngx.components.UIDynamicAction-1761315650403]: 
+    beanData: '{"ionBean":"CallSequenceAction","requestable":"plain:ConvertigoMonitor.MetricsRealtime"}'
+    ↓UpdateMetrics [ngx.components.UICustomAsyncAction-1761315763280]: 
+      actionValue: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
+          - com.twinsoft.convertigo.beans.common.FormatedContent: 
+            →: |
+              '		try {
+              			page.c8o.log.debug(''[MB] ''+ props.actionFunction +'': ''+ props.actionName);
+              			let metrics = props.out.metrics;
+              			for (const [k,v] of Object.entries(metrics?.memory?.heap ?? {})) {
+              				let series = page.global.metricsSeries.find(s => s.name == k)?.data;
+              				if (!series) {
+              					page.global.metricsSeries.push({name: k, data: series = []});
+              				}
+              				series.push(v);
+              			}
+              			page.global.metricsSeries = [...page.global.metricsSeries];
+              		} catch (e) {
+              		
+              		} finally {
+              			return;
+              		}
+              '
+      ↓Wait [ngx.components.UICustomAction-1761315942604]: 
+        actionValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
+            - com.twinsoft.convertigo.beans.common.FormatedContent: 
+              →: |
+                '		page.c8o.log.debug(''[MB] ''+ props.actionFunction +'': ''+ props.actionName);
+                		window.setTimeout(resolve, page.global.refreshMetrics);
+                '
+        ↓refreshMetrics [ngx.components.UIDynamicAction-1761315830062]: 
+          beanData: '{"ionBean":"PublishEventAction","topic":"plain:refreshMetrics"}'
