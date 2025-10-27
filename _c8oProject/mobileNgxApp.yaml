@@ -484,6 +484,13 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
        "Property": "plain:metricsMaxPoints",
        "Value": "script:120"
       }'
+  ↓metricsHistory [ngx.components.UIDynamicAction-1761566124215]: 
+    beanData: |
+      '{
+       "ionBean": "SetGlobalAction",
+       "Property": "plain:metricsHistory",
+       "Value": "script:[]"
+      }'
 ↓refreshMetrics [ngx.components.UIEventSubscriber-1761315571120]: 
   topic: refreshMetrics
   ↓callMetrics [ngx.components.UIDynamicAction-1761315650403]: 
@@ -501,35 +508,26 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
                   var memory = metrics.memory || {};
                   var heap = memory.heap || {};
                   var timestamp = metrics.timestamp ? new Date(metrics.timestamp).getTime() : Date.now();
-                  var toMegabytes = function(value) {
-                      return (typeof value === ''number'' && isFinite(value)) ? parseFloat((value / (1024 * 1024)).toFixed(2)) : null;
+                  var point = {
+                      x: timestamp,
+                      init: heap.init != null ? parseFloat((heap.init / (1024 * 1024)).toFixed(2)) : null,
+                      used: heap.used != null ? parseFloat((heap.used / (1024 * 1024)).toFixed(2)) : null,
+                      committed: heap.committed != null ? parseFloat((heap.committed / (1024 * 1024)).toFixed(2)) : null,
+                      max: heap.max != null ? parseFloat((heap.max / (1024 * 1024)).toFixed(2)) : null
                   };
+                  var history = Array.isArray(page.global.metricsHistory) ? page.global.metricsHistory.slice() : [];
+                  history.push(point);
                   var maxPoints = Number(page.global.metricsMaxPoints) || 120;
-                  var seriesList = page.global.metricsSeries || [];
-                  var keys = Object.keys(heap);
-                  for (var i = 0; i < keys.length; i++) {
-                      var key = keys[i];
-                      var value = heap[key];
-                      var existing = null;
-                      for (var j = 0; j < seriesList.length; j++) {
-                          if (seriesList[j].name === key) {
-                              existing = seriesList[j];
-                              break;
-                          }
-                      }
-                      if (!existing) {
-                          existing = { name: key, data: [] };
-                          seriesList.push(existing);
-                      }
-                      var data = existing.data;
-                      data.push({ x: timestamp, y: toMegabytes(value) });
-                      if (data.length > maxPoints) {
-                          data.splice(0, data.length - maxPoints);
-                      }
+                  if (history.length > maxPoints) {
+                      history.splice(0, history.length - maxPoints);
                   }
-                  page.global.metricsSeries = seriesList.map(function(item) {
-                      return { name: item.name, data: item.data.slice() };
-                  });
+                  page.global.metricsHistory = history;
+                  page.global.metricsSeries = [
+                      { name: ''init'', data: history.map(function(p){ return { x: p.x, y: p.init }; }) },
+                      { name: ''used'', data: history.map(function(p){ return { x: p.x, y: p.used }; }) },
+                      { name: ''committed'', data: history.map(function(p){ return { x: p.x, y: p.committed }; }) },
+                      { name: ''max'', data: history.map(function(p){ return { x: p.x, y: p.max }; }) }
+                  ];
               } catch (e) {
                   page.c8o.log.warn(''[MB] UpdateMetrics error'', e);
               } finally {

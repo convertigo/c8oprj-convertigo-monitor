@@ -81,7 +81,7 @@ title: First page
       varValue: 
         - xmlizable: 
           - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: 'script:{ type: ''area'', height: 350, animations: { enabled: false }, zoom: { enabled: false }, toolbar: { show: false } }'
+          - MobileSmartSourceType: 'script:{ type: ''line'', height: 350, animations: { enabled: false }, zoom: { enabled: false }, toolbar: { show: false } }'
     ↓annotations [ngx.components.UIUseVariable-1761315225091]: 
       comment: |
         Annotations in ApexCharts allows you to write custom text on specific data-points or on axes values.
@@ -115,7 +115,7 @@ title: First page
       varValue: 
         - xmlizable: 
           - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: 'script:{ curve: ''smooth'', width: 2 }'
+          - MobileSmartSourceType: 'script:{ curve: ''smooth'', width: [2, 2, 2, 2] }'
     ↓labels [ngx.components.UIUseVariable-1761315225101]: 
       varValue: 
         - xmlizable: 
@@ -130,7 +130,7 @@ title: First page
       varValue: 
         - xmlizable: 
           - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: 'script:{ type: ''solid'', opacity: [0.20, 0.35, 0.25, 0.20] }'
+          - MobileSmartSourceType: 'script:{ type: ''solid'', opacity: 1 }'
     ↓tooltip [ngx.components.UIUseVariable-1761315225107]: 
       varValue: 
         - xmlizable: 
@@ -153,7 +153,7 @@ title: First page
       varValue: 
         - xmlizable: 
           - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: 'script:{ type: ''datetime'', range: 300000, labels: { format: ''HH:mm:ss'' } }'
+          - MobileSmartSourceType: 'script:{ type: ''datetime'', range: 120000, labels: { format: ''HH:mm:ss'' } }'
     ↓yaxis [ngx.components.UIUseVariable-1761315225115]: 
       varValue: 
         - xmlizable: 
