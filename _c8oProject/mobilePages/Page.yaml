@@ -6,15 +6,27 @@ scriptContent:
     - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
     - com.twinsoft.convertigo.beans.common.FormatedContent: 
       →: |
-        /*Begin_c8o_PageImport*/
+        '/*Begin_c8o_PageImport*/
         /*End_c8o_PageImport*/
         /*Begin_c8o_PageDeclaration*/
         	/*End_c8o_PageDeclaration*/
         /*Begin_c8o_PageConstructor*/
         		/*End_c8o_PageConstructor*/
         /*Begin_c8o_PageFunction*/
+        	public formatMemory(value){
+        		if (value === null || value === undefined) {
+        			return ''n/a'';
+        		}
+        		return value >= 1024 ? (value / 1024).toFixed(2) + '' GB'' : value.toFixed(2) + '' MB'';
+        	}
+        	
+        	public formatLegend = (seriesName: string, opts: any) => {
+        		const series = opts?.w?.globals?.series?.[opts.seriesIndex];
+        		const last = Array.isArray(series) && series.length ? series[series.length - 1] : null;
+        		return last == null ? seriesName : `${seriesName} · ${this.formatMemory(last)}`;
+        	};
         	/*End_c8o_PageFunction*/
-        
+        '
 segment: path-to-xfirst
 title: First page
 ↓Header [ngx.components.UIDynamicElement-1491634212350]: 
@@ -69,7 +81,7 @@ title: First page
       varValue: 
         - xmlizable: 
           - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: 'script:{type: ''area'',  height: 350, zoom: { enabled: true }}'
+          - MobileSmartSourceType: 'script:{ type: ''area'', height: 350, animations: { enabled: false }, zoom: { enabled: false }, toolbar: { show: false } }'
     ↓annotations [ngx.components.UIUseVariable-1761315225091]: 
       comment: |
         Annotations in ApexCharts allows you to write custom text on specific data-points or on axes values.
@@ -82,7 +94,7 @@ title: First page
       varValue: 
         - xmlizable: 
           - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
+          - MobileSmartSourceType: script:['#1e88e5', '#20c997', '#ff922b', '#fa5252']
     ↓dataLabels [ngx.components.UIUseVariable-1761315225095]: 
       comment: |
         Data Labels are the actual values which are passed in the series. You can add formatters which will allow you to modify values before displaying.
@@ -90,7 +102,7 @@ title: First page
       varValue: 
         - xmlizable: 
           - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
+          - MobileSmartSourceType: 'script:{ enabled: false }'
     ↓series [ngx.components.UIUseVariable-1761315225097]: 
       comment: |
         The series is a set of data. You may have single or multiple data series.
@@ -103,7 +115,7 @@ title: First page
       varValue: 
         - xmlizable: 
           - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
+          - MobileSmartSourceType: 'script:{ curve: ''smooth'', width: 2 }'
     ↓labels [ngx.components.UIUseVariable-1761315225101]: 
       varValue: 
         - xmlizable: 
@@ -113,17 +125,17 @@ title: First page
       varValue: 
         - xmlizable: 
           - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
+          - MobileSmartSourceType: 'script:{ position: ''top'', formatter: this.formatLegend }'
     ↓fill [ngx.components.UIUseVariable-1761315225105]: 
       varValue: 
         - xmlizable: 
           - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
+          - MobileSmartSourceType: 'script:{ type: ''solid'', opacity: [0.20, 0.35, 0.25, 0.20] }'
     ↓tooltip [ngx.components.UIUseVariable-1761315225107]: 
       varValue: 
         - xmlizable: 
           - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
+          - MobileSmartSourceType: 'script:{ x: { format: ''HH:mm:ss'' }, y: { formatter: this.formatMemory } }'
     ↓plotOptions [ngx.components.UIUseVariable-1761315225109]: 
       varValue: 
         - xmlizable: 
@@ -141,17 +153,17 @@ title: First page
       varValue: 
         - xmlizable: 
           - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
+          - MobileSmartSourceType: 'script:{ type: ''datetime'', range: 300000, labels: { format: ''HH:mm:ss'' } }'
     ↓yaxis [ngx.components.UIUseVariable-1761315225115]: 
       varValue: 
         - xmlizable: 
           - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
+          - MobileSmartSourceType: 'script:[{ labels: { formatter: this.formatMemory } }]'
     ↓grid [ngx.components.UIUseVariable-1761315225117]: 
       varValue: 
         - xmlizable: 
           - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
+          - MobileSmartSourceType: 'script:{ strokeDashArray: 2, borderColor: ''#e9ecef'' }'
     ↓states [ngx.components.UIUseVariable-1761315225119]: 
       varValue: 
         - xmlizable: 

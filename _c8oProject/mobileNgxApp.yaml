@@ -477,6 +477,13 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
       }'
     ↓refreshMetrics [ngx.components.UIDynamicAction-1761315856805]: 
       beanData: '{"ionBean":"PublishEventAction","topic":"plain:refreshMetrics"}'
+  ↓metricsMaxPoints [ngx.components.UIDynamicAction-1761557806040]: 
+    beanData: |
+      '{
+       "ionBean": "SetGlobalAction",
+       "Property": "plain:metricsMaxPoints",
+       "Value": "script:120"
+      }'
 ↓refreshMetrics [ngx.components.UIEventSubscriber-1761315571120]: 
   topic: refreshMetrics
   ↓callMetrics [ngx.components.UIDynamicAction-1761315650403]: 
@@ -487,31 +494,55 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
           - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
           - com.twinsoft.convertigo.beans.common.FormatedContent: 
             →: |
-              '		try {
-              			page.c8o.log.debug(''[MB] ''+ props.actionFunction +'': ''+ props.actionName);
-              			let metrics = props.out.metrics;
-              			for (const [k,v] of Object.entries(metrics?.memory?.heap ?? {})) {
-              				let series = page.global.metricsSeries.find(s => s.name == k)?.data;
-              				if (!series) {
-              					page.global.metricsSeries.push({name: k, data: series = []});
-              				}
-              				series.push(v);
-              			}
-              			page.global.metricsSeries = [...page.global.metricsSeries];
-              		} catch (e) {
-              		
-              		} finally {
-              			return;
-              		}
-              '
+              'try {
+                  page.c8o.log.debug(''[MB] '' + props.actionFunction + '': '' + props.actionName);
+                  var out = props.out || {};
+                  var metrics = out.metrics || {};
+                  var memory = metrics.memory || {};
+                  var heap = memory.heap || {};
+                  var timestamp = metrics.timestamp ? new Date(metrics.timestamp).getTime() : Date.now();
+                  var toMegabytes = function(value) {
+                      return (typeof value === ''number'' && isFinite(value)) ? parseFloat((value / (1024 * 1024)).toFixed(2)) : null;
+                  };
+                  var maxPoints = Number(page.global.metricsMaxPoints) || 120;
+                  var seriesList = page.global.metricsSeries || [];
+                  var keys = Object.keys(heap);
+                  for (var i = 0; i < keys.length; i++) {
+                      var key = keys[i];
+                      var value = heap[key];
+                      var existing = null;
+                      for (var j = 0; j < seriesList.length; j++) {
+                          if (seriesList[j].name === key) {
+                              existing = seriesList[j];
+                              break;
+                          }
+                      }
+                      if (!existing) {
+                          existing = { name: key, data: [] };
+                          seriesList.push(existing);
+                      }
+                      var data = existing.data;
+                      data.push({ x: timestamp, y: toMegabytes(value) });
+                      if (data.length > maxPoints) {
+                          data.splice(0, data.length - maxPoints);
+                      }
+                  }
+                  page.global.metricsSeries = seriesList.map(function(item) {
+                      return { name: item.name, data: item.data.slice() };
+                  });
+              } catch (e) {
+                  page.c8o.log.warn(''[MB] UpdateMetrics error'', e);
+              } finally {
+                  return;
+              }'
       ↓Wait [ngx.components.UICustomAction-1761315942604]: 
         actionValue: 
           - xmlizable: 
             - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
             - com.twinsoft.convertigo.beans.common.FormatedContent: 
               →: |
-                '		page.c8o.log.debug(''[MB] ''+ props.actionFunction +'': ''+ props.actionName);
-                		window.setTimeout(resolve, page.global.refreshMetrics);
-                '
+                'page.c8o.log.debug(''[MB] '' + props.actionFunction + '': '' + props.actionName);
+                var delay = Number(page.global.refreshMetrics) || 1000;
+                window.setTimeout(resolve, delay);'
         ↓refreshMetrics [ngx.components.UIDynamicAction-1761315830062]: 
           beanData: '{"ionBean":"PublishEventAction","topic":"plain:refreshMetrics"}'
