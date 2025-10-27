@@ -12,6 +12,7 @@ For more technical informations : [documentation](./project.md)
 - [Mobile Application](#mobile-application)
     - [Pages](#pages)
         - [Page](#page)
+        - [ThreadDetails](#threaddetails)
         - [Threads](#threads)
 
 
@@ -50,6 +51,10 @@ Describes the mobile application global properties
 #### Page
 
 My First Page as root page
+
+#### ThreadDetails
+
+Detailed view of a single JVM thread
 
 #### Threads
 

@@ -702,6 +702,116 @@ comment: Returns a detailed snapshot of JVM threads with optional name filtering
                 - SmartType: 
                   - ↑mode: JS
                   - →→: item.getLockedSynchronizers().length
+          ↓stackTrace [steps.JsonArrayStep-1761578993674]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: stackTrace
+            ↓stackFrames [steps.SimpleIteratorStep-1761578993676]: 
+              expression: java.util.Arrays.asList(item.getStackTrace())
+              ↓frame [steps.JsonObjectStep-1761578993678]: 
+                key: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                    - SmartType: 
+                      - ↑mode: PLAIN
+                      - →→: frame
+                ↓textField [steps.JsonFieldStep-1761578993680]: 
+                  key: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                      - SmartType: 
+                        - ↑mode: PLAIN
+                        - →→: text
+                  value: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                      - SmartType: 
+                        - ↑mode: JS
+                        - →→: item.toString()
+                ↓classNameField [steps.JsonFieldStep-1761578993682]: 
+                  key: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                      - SmartType: 
+                        - ↑mode: PLAIN
+                        - →→: className
+                  value: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                      - SmartType: 
+                        - ↑mode: JS
+                        - →→: item.getClassName()
+                ↓methodNameField [steps.JsonFieldStep-1761578993684]: 
+                  key: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                      - SmartType: 
+                        - ↑mode: PLAIN
+                        - →→: methodName
+                  value: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                      - SmartType: 
+                        - ↑mode: JS
+                        - →→: item.getMethodName()
+                ↓fileNameField [steps.JsonFieldStep-1761578993686]: 
+                  key: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                      - SmartType: 
+                        - ↑mode: PLAIN
+                        - →→: fileName
+                  value: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                      - SmartType: 
+                        - ↑mode: JS
+                        - →→: 'item.getFileName() != null ? item.getFileName() : null'
+                ↓lineNumberField [steps.JsonFieldStep-1761578993688]: 
+                  key: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                      - SmartType: 
+                        - ↑mode: PLAIN
+                        - →→: lineNumber
+                  type: number
+                  value: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                      - SmartType: 
+                        - ↑mode: JS
+                        - →→: item.getLineNumber()
+                ↓nativeField [steps.JsonFieldStep-1761578993690]: 
+                  key: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                      - SmartType: 
+                        - ↑mode: PLAIN
+                        - →→: native
+                  type: bool
+                  value: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                      - SmartType: 
+                        - ↑mode: JS
+                        - →→: item.isNativeMethod()
+  ↓deadlockedThreadsField [steps.JsonFieldStep-1761578427939]: 
+    key: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: PLAIN
+          - →→: deadlockedThreads
+    type: number
+    value: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: JS
+          - →→: deadlockedIdsList.size()
 ↓nameFilter [variables.RequestableVariable-1761314144001]: 
   comment: Optional Java regex applied to thread names
   description: Optional Java regular expression used to filter the threads by name. Leave empty to include all threads.

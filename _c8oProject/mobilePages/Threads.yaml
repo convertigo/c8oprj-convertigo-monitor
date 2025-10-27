@@ -122,7 +122,7 @@ title: Threads
           textValue: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-              - MobileSmartSourceType: 'script:''Deadlocked · '' + this.formatCount((this.global.threadsSnapshot && this.global.threadsSnapshot.deadlockedThreadIds ? this.global.threadsSnapshot.deadlockedThreadIds.length : 0))'
+              - MobileSmartSourceType: script:'Deadlocked · ' + this.formatCount(this.global.threadsSnapshot && this.global.threadsSnapshot.deadlockedThreads)
       ↓TextItem3 [ngx.components.UIDynamicElement-1761575995403]: 
         beanData: '{"ionBean":"TextItem"}'
         tagName: ion-text
@@ -219,6 +219,30 @@ title: Threads
                 - xmlizable: 
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
                   - MobileSmartSourceType: script:this.truncateSample(thread && thread.stackSample)
+        ↓DetailsButton [ngx.components.UIDynamicElement-1761583600001]: 
+          beanData: '{"ionBean":"Button"}'
+          tagName: ion-button
+          ↓Attr [ngx.components.UIAttribute-1761583600003]: 
+            attrName: slot
+            attrValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: plain:end
+          ↓Icon [ngx.components.UIDynamicElement-1761583600005]: 
+            beanData: '{"ionBean":"Icon","IconName":"plain:arrow-forward"}'
+            tagName: ion-icon
+          ↓Event [ngx.components.UIControlEvent-1761583600007]: 
+            attrName: click
+            eventName: click
+            ↓SetSelectedThread [ngx.components.UIDynamicAction-1761583600009]: 
+              beanData: |
+                '{
+                 "ionBean": "SetGlobalAction",
+                 "Property": "plain:selectedThread",
+                 "Value": "script:thread"
+                }'
+            ↓NavigateDetails [ngx.components.UIDynamicAction-1761583600011]: 
+              beanData: '{"ionBean":"PushPageAction","page":"plain:ThreadDetails"}'
         ↓Note [ngx.components.UIDynamicElement-1761575995449]: 
           beanData: '{"ionBean":"Note"}'
           tagName: ion-note
