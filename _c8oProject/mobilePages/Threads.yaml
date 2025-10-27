@@ -232,17 +232,43 @@ title: Threads
             beanData: '{"ionBean":"Icon","IconName":"plain:arrow-forward"}'
             tagName: ion-icon
           ↓Event [ngx.components.UIControlEvent-1761583600007]: 
-            attrName: click
-            eventName: click
             ↓SetSelectedThread [ngx.components.UIDynamicAction-1761583600009]: 
               beanData: |
                 '{
                  "ionBean": "SetGlobalAction",
                  "Property": "plain:selectedThread",
-                 "Value": "script:thread"
+                 "Value": "script:thread ? JSON.parse(JSON.stringify(thread)) : null"
                 }'
+            ↓ResetThreadDetails [ngx.components.UIDynamicAction-1761584001001]: 
+              beanData: |
+                '{
+                 "ionBean": "SetGlobalAction",
+                 "Property": "plain:threadDetails",
+                 "Value": "script:null"
+                }'
+            ↓FetchThreadDetails [ngx.components.UIDynamicAction-1761584001003]: 
+              beanData: '{"ionBean":"CallSequenceAction","requestable":"plain:ConvertigoMonitor.ThreadDetails"}'
+              ↓threadId [ngx.components.UIControlVariable-1761584001005]: 
+                varValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:thread && thread.id != null ? thread.id : null'
+              ↓StoreThreadDetails [ngx.components.UICustomAsyncAction-1761584001007]: 
+                actionValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
+                    - com.twinsoft.convertigo.beans.common.FormatedContent: 
+                      →: |
+                        'try {
+                            var detail = props.out && props.out.detail ? props.out.detail : null;
+                            page.global.threadDetails = detail;
+                        } catch (assignErr) {
+                            page.c8o.log.warn(''[MB] StoreThreadDetails error'', assignErr);
+                        } finally {
+                            return;
+                        }'
             ↓NavigateDetails [ngx.components.UIDynamicAction-1761583600011]: 
-              beanData: '{"ionBean":"PushPageAction","page":"plain:ThreadDetails"}'
+              beanData: '{"ionBean":"PushPageAction","page":"plain:ConvertigoMonitor.Application.NgxApp.ThreadDetails"}'
         ↓Note [ngx.components.UIDynamicElement-1761575995449]: 
           beanData: '{"ionBean":"Note"}'
           tagName: ion-note

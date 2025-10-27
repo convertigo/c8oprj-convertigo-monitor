@@ -39,6 +39,36 @@ does nothing
 Returns a real-time snapshot of JVM threads and memory metrics.
 </p></blockquote></details>
 
+<details><summary><b>ThreadDetails</b> : Returns detailed information about a single JVM thread identified by its id</summary><blockquote><p>
+
+
+## ![](https://github.com/convertigo/convertigo/blob/develop/engine/src/com/twinsoft/convertigo/beans/sequences/images/genericsequence_color_16x16.png?raw=true "GenericSequence") ThreadDetails
+
+Returns detailed information about a single JVM thread identified by its id.
+
+<span style="color:DarkGoldenRod">Variables</span>
+
+<table>
+<tr>
+<th>
+name
+</th>
+<th>
+comment
+</th>
+</tr>
+<tr>
+<td>
+<img src="https://github.com/convertigo/convertigo/blob/develop/engine/src/com/twinsoft/convertigo/beans/variables/images/variable_color_16x16.png?raw=true "  alt="RequestableVariable" >&nbsp;threadId
+</td>
+<td>
+Target thread identifier
+</td>
+</tr>
+</table>
+
+</p></blockquote></details>
+
 <details><summary><b>ThreadsSnapshot</b> : Returns a detailed snapshot of JVM threads with optional name filtering</summary><blockquote><p>
 
 

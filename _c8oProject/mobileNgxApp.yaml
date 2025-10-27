@@ -507,6 +507,13 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
        "Property": "plain:selectedThread",
        "Value": "script:null"
       }'
+  ↓threadDetails [ngx.components.UIDynamicAction-1761584000001]: 
+    beanData: |
+      '{
+       "ionBean": "SetGlobalAction",
+       "Property": "plain:threadDetails",
+       "Value": "script:null"
+      }'
   ↓threadsFilter [ngx.components.UIDynamicAction-1761571739026]: 
     beanData: |
       '{
@@ -607,7 +614,43 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
               'try {
                   page.c8o.log.debug(''[MB] '' + props.actionFunction + '': '' + props.actionName);
                   var snapshot = props.out && props.out.snapshot ? props.out.snapshot : {};
+                  if (snapshot && Array.isArray(snapshot.threads)) {
+                      var threads = snapshot.threads.slice();
+                      threads.sort(function(a, b) {
+                          function metric(t) {
+                              if (!t) { return Number.NEGATIVE_INFINITY; }
+                              var cpu = t.cpuTimeMillis != null ? Number(t.cpuTimeMillis) : Number.NEGATIVE_INFINITY;
+                              var user = t.userTimeMillis != null ? Number(t.userTimeMillis) : Number.NEGATIVE_INFINITY;
+                              var waited = t.waitedTimeMillis != null ? Number(t.waitedTimeMillis) : Number.NEGATIVE_INFINITY;
+                              return Math.max(cpu, user, waited);
+                          }
+                          var diff = metric(b) - metric(a);
+                          if (!isNaN(diff) && diff !== 0) {
+                              return diff;
+                          }
+                          var blockedA = a && a.blockedCount != null ? Number(a.blockedCount) : 0;
+                          var blockedB = b && b.blockedCount != null ? Number(b.blockedCount) : 0;
+                          if (blockedB !== blockedA) {
+                              return blockedB - blockedA;
+                          }
+                          var nameA = a && a.name ? String(a.name) : '''';
+                          var nameB = b && b.name ? String(b.name) : '''';
+                          return nameA.localeCompare(nameB);
+                      });
+                      snapshot.threads = threads;
+                  }
                   page.global.threadsSnapshot = snapshot;
+                  if (page.global.selectedThread && page.global.selectedThread.id != null) {
+                      try {
+                          var currentId = page.global.selectedThread.id;
+                          var refreshed = Array.isArray(snapshot && snapshot.threads) ? snapshot.threads.find(function(t){ return t && t.id === currentId; }) : null;
+                          if (refreshed) {
+                              page.global.selectedThread = JSON.parse(JSON.stringify(refreshed));
+                          }
+                      } catch (syncErr) {
+                          page.c8o.log.warn(''[MB] sync selectedThread error'', syncErr);
+                      }
+                  }
               } catch (e) {
                   page.c8o.log.warn(''[MB] UpdateThreads error'', e);
               } finally {

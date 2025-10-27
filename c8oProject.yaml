@@ -4,9 +4,10 @@
   contextTimeout: 59
   corsOrigin: =Origin
   httpSessionTimeout: 60
-  version: 0.0.1
+  version: 0.0.2
   ↓void [connectors.SqlConnector]: 🗏 connectors/void.yaml
   ↓MetricsRealtime [sequences.GenericSequence]: 🗏 sequences/MetricsRealtime.yaml
+  ↓ThreadDetails [sequences.GenericSequence]: 🗏 sequences/ThreadDetails.yaml
   ↓ThreadsSnapshot [sequences.GenericSequence]: 🗏 sequences/ThreadsSnapshot.yaml
   ↓libApexCharts_reference [references.ProjectSchemaReference]: 
     projectName: libApexCharts=https://github.com/convertigo/c8oprj-lib-apexcharts-ui-ngx.git:branch=8.3.0
