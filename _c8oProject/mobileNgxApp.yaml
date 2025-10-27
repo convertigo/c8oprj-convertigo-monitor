@@ -65,6 +65,7 @@ componentScriptContent:
 tplProjectName: mobilebuilder_tpl_8_3_0_ngx
 ↓Menu [ngx.components.UIDynamicMenu-1500890597895]: 🗏 mobileMenus/Menu.yaml
 ↓Page [ngx.components.PageComponent-1500538678074]: 🗏 mobilePages/Page.yaml
+↓Threads [ngx.components.PageComponent-1761572005939]: 🗏 mobilePages/Threads.yaml
 ↓Style [ngx.components.UIStyle-1491635462437]: 
   comment: You can add some global application styles here
   styleContent: 
@@ -491,6 +492,72 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
        "Property": "plain:metricsHistory",
        "Value": "script:[]"
       }'
+  ↓threadsSnapshot [ngx.components.UIDynamicAction-1761571739024]: 
+    beanData: |
+      '{
+       "ionBean": "SetGlobalAction",
+       "Property": "plain:threadsSnapshot",
+       "Value": "script:{}"
+      }'
+  ↓threadsFilter [ngx.components.UIDynamicAction-1761571739026]: 
+    beanData: |
+      '{
+       "ionBean": "SetGlobalAction",
+       "Property": "plain:threadsFilter",
+       "Value": "script:''''"
+      }'
+  ↓threadsHistory [ngx.components.UIDynamicAction-1761571739028]: 
+    beanData: |
+      '{
+       "ionBean": "SetGlobalAction",
+       "Property": "plain:threadsHistory",
+       "Value": "script:[]"
+      }'
+    isEnabled: false
+    ↓threadsHistoryPublish [ngx.components.UIDynamicAction-1761571739030]: 
+      beanData: '{"ionBean":"bean"}'
+  ↓Subscribe_Handler [ngx.components.UIEventSubscriber-1761573477154]: 
+    topic: refreshThreads
+    ↓DynamicAction [ngx.components.UIDynamicAction-1761573477156]: 
+      beanData: '{"ionBean":"CallSequenceAction","requestable":"plain:ConvertigoMonitor.ThreadsSnapshot"}'
+      ↓nameFilter [ngx.components.UIControlVariable-1761573477158]: 
+        comment: Regex filter from UI
+        varValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: script:this.global.threadsFilter || ''
+      ↓UpdateThreads [ngx.components.UICustomAsyncAction-1761573477160]: 
+        actionValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
+            - com.twinsoft.convertigo.beans.common.FormatedContent: 
+              →: |
+                'try {
+                    page.c8o.log.debug(''[MB] '' + props.actionFunction + '': '' + props.actionName);
+                    var snapshot = props.out && props.out.snapshot ? props.out.snapshot : {};
+                    this.global.threadsSnapshot = snapshot;
+                } catch (e) {
+                    page.c8o.log.warn(''[MB] UpdateThreads error'', e);
+                } finally {
+                    return;
+                }
+                '
+        comment: Store latest snapshot into globals
+        ↓WaitThreads [ngx.components.UICustomAction-1761573477162]: 
+          actionValue: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
+              - com.twinsoft.convertigo.beans.common.FormatedContent: 
+                →: |
+                  'page.c8o.log.debug(''[MB] '' + props.actionFunction + '': '' + props.actionName);
+                  var delay = Number(this.global.refreshThreads) || 5000;
+                  window.setTimeout(resolve, delay);
+                  '
+          comment: Schedule next poll
+          ↓DynamicAction [ngx.components.UIDynamicAction-1761573477164]: 
+            beanData: '{"ionBean":"PublishEventAction","topic":"plain:refreshThreads"}'
+  ↓DynamicAction [ngx.components.UIDynamicAction-1761573477166]: 
+    beanData: '{"ionBean":"PublishEventAction","topic":"plain:refreshThreads"}'
 ↓refreshMetrics [ngx.components.UIEventSubscriber-1761315571120]: 
   topic: refreshMetrics
   ↓callMetrics [ngx.components.UIDynamicAction-1761315650403]: 

@@ -12,6 +12,7 @@ For more technical informations : [documentation](./project.md)
 - [Mobile Application](#mobile-application)
     - [Pages](#pages)
         - [Page](#page)
+        - [Threads](#threads)
 
 
 ## Installation
@@ -49,6 +50,10 @@ Describes the mobile application global properties
 #### Page
 
 My First Page as root page
+
+#### Threads
+
+Threads snapshot view
 
 
 
