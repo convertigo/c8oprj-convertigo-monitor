@@ -188,6 +188,78 @@ scriptContent:
         		}
         		return badges;
         	}
+        	public heatmapMetrics(): Array<{ key: string; label: string; }> {
+        		return [
+        			{ key: "cpuTimeMillis", label: "CPU time" },
+        			{ key: "waitedTimeMillis", label: "Wait time" },
+        			{ key: "blockedTimeMillis", label: "Blocked time" }
+        		];
+        	}
+        	public heatmapThreadCandidates(limit: number = 8): Array<{ thread: any; label: string; values: Record<string, number>; score: number; }> {
+        		const threads = this.threadCollection();
+        		if (!threads.length) {
+        			return [];
+        		}
+        		const metrics = this.heatmapMetrics();
+        		const enriched = threads.map((thread: any) => {
+        			const values: Record<string, number> = {};
+        			let score = 0;
+        			for (const metric of metrics) {
+        				const raw = Number(thread && typeof thread[metric.key] !== "undefined" && thread[metric.key] !== null ? thread[metric.key] : 0);
+        				const value = Number.isFinite(raw) && raw > 0 ? raw : 0;
+        				values[metric.key] = value;
+        				if (value > score) {
+        					score = value;
+        				}
+        			}
+        			return {
+        				thread,
+        				label: this.threadTitle(thread),
+        				values,
+        				score
+        			};
+        		}).filter((entry) => entry.score > 0);
+        		enriched.sort((a, b) => {
+        			if (b.score === a.score) {
+        				return a.label.localeCompare(b.label);
+        			}
+        			return b.score - a.score;
+        		});
+        		return enriched.slice(0, limit);
+        	}
+        	public threadHeatmapSeries(): any[] {
+        		const metrics = this.heatmapMetrics();
+        		const threads = this.heatmapThreadCandidates();
+        		if (!metrics.length || !threads.length) {
+        			return [];
+        		}
+        		return metrics.map((metric) => ({
+        			name: metric.label,
+        			data: threads.map((entry) => ({
+        				x: entry.label,
+        				y: entry.values[metric.key]
+        			}))
+        		}));
+        	}
+        	public hasThreadHeatmap(): boolean {
+        		const series = this.threadHeatmapSeries();
+        		for (const entry of series) {
+        			const data = entry && Array.isArray(entry.data) ? entry.data : [];
+        			for (const point of data) {
+        				if (point && typeof point.y === "number" && point.y > 0) {
+        					return true;
+        				}
+        			}
+        		}
+        		return false;
+        	}
+        	public threadHeatmapSubtitle(): string {
+        		const threads = this.heatmapThreadCandidates();
+        		return threads.length ? threads.length + " threads · Durations in ms" : "Waiting for timing metrics";
+        	}
+        	public formatHeatmapTooltip = (value: number): string => {
+        		return this.formatMillis(value);
+        	};
         	public stackPreviewText(thread: any): string {
         		if (!thread) {
         			return "No stack sample available.";
@@ -457,6 +529,155 @@ title: Threads
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
                     - MobileSmartSourceType: 'script:(this.snapshot().filter && this.snapshot().filter.applied ? ''Filter · '' + (this.snapshot().filter.pattern || this.snapshot().filter.input || ''(regex)'') : ''Filter inactive'')'
+  ↓HeatmapCard [ngx.components.UIDynamicElement-1762012500001]: 
+    beanData: '{"ionBean":"Card"}'
+    tagName: ion-card
+    ↓CardHeader [ngx.components.UIDynamicElement-1762012500003]: 
+      beanData: '{"ionBean":"CardHeader"}'
+      tagName: ion-card-header
+      ↓CardTitle [ngx.components.UIDynamicElement-1762012500005]: 
+        beanData: '{"ionBean":"CardTitle"}'
+        tagName: ion-card-title
+        ↓Text [ngx.components.UIText-1762012500007]: 
+          textValue: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+              - MobileSmartSourceType: plain:Thread activity heatmap
+      ↓CardSubTitle [ngx.components.UIDynamicElement-1762012500009]: 
+        beanData: '{"ionBean":"CardSubTitle"}'
+        tagName: ion-card-subtitle
+        ↓Text [ngx.components.UIText-1762012500011]: 
+          textValue: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+              - MobileSmartSourceType: script:this.threadHeatmapSubtitle()
+    ↓CardContent [ngx.components.UIDynamicElement-1762012500013]: 
+      beanData: '{"ionBean":"CardContent"}'
+      tagName: ion-card-content
+      ↓DirectiveHeatmap [ngx.components.UIControlDirective-1762012500015]: 
+        directiveName: If
+        directiveSource: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: script:this.hasThreadHeatmap()
+        ↓UseSharedHeatmap [ngx.components.UIUseShared-1762012500017]: 
+          identifier: threadHeatmap
+          sharedcomponent: libApexCharts.Application.NgxApp.apxChart
+          ↓chart [ngx.components.UIUseVariable-1762012500019]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ type: ''heatmap'', height: 350, toolbar: { show: false } }'
+          ↓annotations [ngx.components.UIUseVariable-1762012500021]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓colors [ngx.components.UIUseVariable-1762012500023]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:[''#1e88e5'']'
+          ↓dataLabels [ngx.components.UIUseVariable-1762012500025]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ enabled: false }'
+          ↓series [ngx.components.UIUseVariable-1762012500027]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:this.threadHeatmapSeries()
+          ↓stroke [ngx.components.UIUseVariable-1762012500029]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓labels [ngx.components.UIUseVariable-1762012500031]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓legend [ngx.components.UIUseVariable-1762012500033]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ position: ''top'' }'
+          ↓fill [ngx.components.UIUseVariable-1762012500035]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓tooltip [ngx.components.UIUseVariable-1762012500037]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ y: { formatter: this.formatHeatmapTooltip } }'
+          ↓plotOptions [ngx.components.UIUseVariable-1762012500039]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ heatmap: { shadeIntensity: 0.6, radius: 4, useFillColorAsStroke: false } }'
+          ↓responsive [ngx.components.UIUseVariable-1762012500041]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓xaxis [ngx.components.UIUseVariable-1762012500043]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ labels: { rotate: -45, trim: false } }'
+          ↓yaxis [ngx.components.UIUseVariable-1762012500045]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓grid [ngx.components.UIUseVariable-1762012500047]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ strokeDashArray: 2, borderColor: ''#e9ecef'', padding: { right: 10 } }'
+          ↓states [ngx.components.UIUseVariable-1762012500049]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓title [ngx.components.UIUseVariable-1762012500051]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓subtitle [ngx.components.UIUseVariable-1762012500053]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓theme [ngx.components.UIUseVariable-1762012500055]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+      ↓DirectiveHeatmapEmpty [ngx.components.UIControlDirective-1762012500057]: 
+        directiveName: If
+        directiveSource: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: script:!this.hasThreadHeatmap()
+        ↓Placeholder [ngx.components.UIDynamicElement-1762012500059]: 
+          beanData: '{"ionBean":"TextItem"}'
+          tagName: ion-text
+          ↓AttrColor [ngx.components.UIAttribute-1762012500061]: 
+            attrName: color
+            attrValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: plain:medium
+          ↓Text [ngx.components.UIText-1762012500063]: 
+            textValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: plain:No timing data available yet.
   ↓HotCard [ngx.components.UIDynamicElement-1762012000103]: 
     beanData: '{"ionBean":"Card"}'
     tagName: ion-card
