@@ -9,7 +9,7 @@ Convertigo NGX builder Project
 ## ![](https://github.com/convertigo/convertigo/blob/develop/engine/src/com/twinsoft/convertigo/beans/references/images/ProjectSchemaReference_16x16.png?raw=true "ProjectSchemaReference") libApexCharts
 
 
-see [readme](https://github.com/convertigo/c8oprj-lib-apexcharts-ui-ngx/tree/8.3.0#readme)
+see [readme](https://github.com/convertigo/c8oprj-lib-apexcharts-ui-ngx/tree/8.4.0.0#readme)
 </p></blockquote></details>
 
 <details><summary><span style="color:DarkGoldenRod"><i>Connectors</i></span></summary><blockquote><p>
@@ -110,10 +110,10 @@ Describes the mobile application global properties
 <details><summary><span style="color:DarkGoldenRod"><i>Pages</i></span></summary><blockquote><p>
 
 
-<details><summary><b>Page</b> : My First Page as root page</summary><blockquote><p>
+<details><summary><b>Metrics</b> : My First Page as root page</summary><blockquote><p>
 
 
-### ![](https://github.com/convertigo/convertigo/blob/develop/engine/src/com/twinsoft/convertigo/beans/ngx/components/images/pagecomponent_color_16x16.png?raw=true "PageComponent") Page
+### ![](https://github.com/convertigo/convertigo/blob/develop/engine/src/com/twinsoft/convertigo/beans/ngx/components/images/pagecomponent_color_16x16.png?raw=true "PageComponent") Metrics
 
 My First Page as root page
 </p></blockquote></details>

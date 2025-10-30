@@ -27,7 +27,7 @@ scriptContent:
         	};
         	/*End_c8o_PageFunction*/
         '
-segment: path-to-xfirst
+segment: metrics
 title: First page
 ↓Header [ngx.components.UIDynamicElement-1491634212350]: 
   beanData: '{"ionBean":"Header"}'
@@ -52,7 +52,7 @@ title: First page
         textValue: 
           - xmlizable: 
             - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-            - MobileSmartSourceType: plain:Page
+            - MobileSmartSourceType: plain:Metrics
     ↓ButtonSet2 [ngx.components.UIDynamicElement-1588170811054]: 
       beanData: '{"ionBean":"ButtonSet","SetPosition":"plain:end"}'
       tagName: ion-buttons

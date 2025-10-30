@@ -11,7 +11,7 @@ For more technical informations : [documentation](./project.md)
 - [Installation](#installation)
 - [Mobile Application](#mobile-application)
     - [Pages](#pages)
-        - [Page](#page)
+        - [Metrics](#metrics)
         - [ThreadDetails](#threaddetails)
         - [Threads](#threads)
 
@@ -29,13 +29,13 @@ For more technical informations : [documentation](./project.md)
      <tr><td>To contribute</td><td>
 
      ```
-     ConvertigoMonitor=/Users/nicolas/dev/convertigo/runtime-ConvertigoStudio/ConvertigoMonitor/.git:branch=master
+     ConvertigoMonitor=git@github.com:convertigo/c8oprj-convertigo-monitor.git:branch=main
      ```
      </td></tr>
      <tr><td>To simply use</td><td>
 
      ```
-     ConvertigoMonitor=/Users/nicolas/dev/convertigo/runtime-ConvertigoStudio/ConvertigoMonitor//archive/master.zip
+     ConvertigoMonitor=git@github.com:convertigo/c8oprj-convertigo-monitor/archive/main.zip
      ```
      </td></tr>
     </table>
@@ -48,7 +48,7 @@ Describes the mobile application global properties
 
 ### Pages
 
-#### Page
+#### Metrics
 
 My First Page as root page
 
