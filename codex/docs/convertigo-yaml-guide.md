@@ -47,14 +47,31 @@ steps:
 - Les valeurs textuelles suivent les regles de `writeYamlText` :
   - Chaques valeur est nettoyee des retours chariot Windows.
   - Si la valeur commence par un caractere YAML special ou contient `: `, elle est entouree de quotes simples (`'`).
-  - Une valeur vide devient `''`.
-  - Les chaines multi-lignes utilisent un bloc `|` en conservant l indentation :
+- Une valeur vide devient `''`.
+- Les chaines multi-lignes utilisent un bloc `|` en conservant l indentation :
 
 ```
 expression: |
   // premiere ligne
   return context.user;
 ```
+
+- Pour les blocs `→: |` issus de `com.twinsoft.convertigo.beans.common.FormatedContent`, **chaque ligne du contenu doit demarrer exactement sous le `→:`**. Concretement, on conserve les espaces qui precedent `→: |` (souvent 6) puis on laisse Convertigo gerer les tabulations internes. Exemple :
+
+```
+    - com.twinsoft.convertigo.beans.common.FormatedContent: 
+      →: |
+        '/*Begin_c8o_PageFunction*/
+        \tpublic myHelper(){
+        \t\treturn ''ok'';
+        \t}
+        \t/*End_c8o_PageFunction*/
+        '
+```
+
+Ici chaque ligne du bloc commence par 8 espaces (`      `) pour rester alignee sur `→: |`, puis les tabulations `\t` structurent le corps JS. Enlever ou ajouter des espaces avant le quote (`'`) provoque une erreur `no match` lors du rechargement par `YamlConverter`.
+
+- Dans ces blocs, **toutes les apostrophes littérales doivent être doublées** (`'` devient `''`) afin de respecter l’échappement Convertigo. Le convertisseur se base sur ce doublement pour ne pas tronquer les chaînes Rhino.
 
 - Lorsque le XML d origine contient du CDATA, `YamlConverter` ajoute un bloc `→:`. Dans la pratique, ecrire un bloc `→:` revient a fournir le contenu exact du CDATA :
 
