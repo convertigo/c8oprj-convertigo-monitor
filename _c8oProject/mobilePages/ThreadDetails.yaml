@@ -70,7 +70,77 @@ scriptContent:
         		const detail = this.detail();
         		return detail && Array.isArray(detail.stackTrace) ? detail.stackTrace : [];
         	}
-        /*End_c8o_PageFunction*/
+        	public stateColor(state: string): string {
+        		switch (state) {
+        			case "RUNNABLE":
+        				return "success";
+        			case "WAITING":
+        				return "tertiary";
+        			case "TIMED_WAITING":
+        				return "warning";
+        			case "BLOCKED":
+        				return "danger";
+        			case "TERMINATED":
+        				return "medium";
+        			default:
+        				return "medium";
+        		}
+        	}
+        	public detailState(): string {
+        		return String(this.detailField("state", "unknown"));
+        	}
+        	public summaryBadges(): any[] {
+        		const badges: any[] = [];
+        		const detail = this.detail();
+        		const summary = this.currentThread();
+        		const isDaemon = this.detailField("daemon", summary && summary.daemon);
+        		const isNative = this.detailField("inNative", summary && summary.inNative);
+        		const isSuspended = this.detailField("suspended", summary && summary.suspended);
+        		const isDeadlocked = this.detailField("deadlocked", summary && summary.deadlocked);
+        		if (isDeadlocked) {
+        			badges.push({ label: "Deadlocked", color: "danger" });
+        		}
+        		if (isDaemon) {
+        			badges.push({ label: "Daemon", color: "medium" });
+        		}
+        		if (isSuspended) {
+        			badges.push({ label: "Suspended", color: "warning" });
+        		}
+        		if (isNative) {
+        			badges.push({ label: "Native", color: "tertiary" });
+        		}
+        		if (detail && detail.lockOwnerName) {
+        			badges.push({ label: "Owner: " + detail.lockOwnerName, color: "light" });
+        		}
+        		return badges;
+        	}
+        	public stackAsText(): string {
+        		const detail = this.detail();
+        		if (detail && detail.stackAsText) {
+        			return String(detail.stackAsText);
+        		}
+        		const frames = this.stackFrames();
+        		if (!frames.length) {
+        			return "No stack frames captured.";
+        		}
+        		return frames.map((frame: any) => this.formatFrame(frame)).join("\n");
+        	}
+        	public copyFullStack(): void {
+        		const text = this.stackAsText();
+        		if (!text) {
+        			return;
+        		}
+        		try {
+        			if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+        				navigator.clipboard.writeText(text);
+        			}
+        		} catch (error) {
+        			if (this.c8o && this.c8o.log && this.c8o.log.warn) {
+        				this.c8o.log.warn("[ThreadDetails] copyFullStack failed", error);
+        			}
+        		}
+        	}
+        	/*End_c8o_PageFunction*/
         '
 segment: thread-details
 title: Thread Details
@@ -170,42 +240,60 @@ title: Thread Details
             textValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: plain:
+                - MobileSmartSourceType: 'script:''State · '' + this.detailField(''state'', this.currentThread() && this.currentThread().state || ''unknown'')'
         ↓TagCPU [ngx.components.UIElement-1761583001047]: 
           tagName: p
           ↓Text [ngx.components.UIText-1761583001049]: 
             textValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: plain:
+                - MobileSmartSourceType: 'script:''CPU '' + this.formatMillis(this.detailField(''cpuTimeMillis'', this.currentThread() && this.currentThread().cpuTimeMillis)) + '' · User '' + this.formatMillis(this.detailField(''userTimeMillis'', this.currentThread() && this.currentThread().userTimeMillis))'
         ↓TagCounts [ngx.components.UIElement-1761583001051]: 
           tagName: p
           ↓Text [ngx.components.UIText-1761583001053]: 
             textValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: plain:
+                - MobileSmartSourceType: 'script:''Blocked '' + this.formatCount(this.detailField(''blockedCount'', this.currentThread() && this.currentThread().blockedCount)) + '' · Waited '' + this.formatCount(this.detailField(''waitedCount'', this.currentThread() && this.currentThread().waitedCount))'
         ↓TagTimes [ngx.components.UIElement-1761583001055]: 
           tagName: p
           ↓Text [ngx.components.UIText-1761583001057]: 
             textValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: plain:
+                - MobileSmartSourceType: 'script:''Waited '' + this.formatMillis(this.detailField(''waitedTimeMillis'', this.currentThread() && this.currentThread().waitedTimeMillis)) + '' · Blocked '' + this.formatMillis(this.detailField(''blockedTimeMillis'', this.currentThread() && this.currentThread().blockedTimeMillis))'
         ↓TagLock [ngx.components.UIElement-1761583001059]: 
           tagName: p
           ↓Text [ngx.components.UIText-1761583001061]: 
             textValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: plain:
+                - MobileSmartSourceType: 'script:''Lock · '' + this.formatLock(this.detailField(''lockName'', this.currentThread() && this.currentThread().lockName))'
         ↓TagOwner [ngx.components.UIElement-1761583001063]: 
           tagName: p
           ↓Text [ngx.components.UIText-1761583001065]: 
             textValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: plain:
+                - MobileSmartSourceType: 'script:''Owner · '' + this.formatLock(this.detailField(''lockOwnerName'', this.currentThread() && this.currentThread().lockOwnerName))'
+        ↓Badges [ngx.components.UIControlDirective-1762012000313]: 
+          directiveExpression: 'let badge of this.summaryBadges()'
+          directiveIndexName: badgeIdx
+          directiveItemName: badge
+          ↓Chip [ngx.components.UIDynamicElement-1762012000315]: 
+            beanData: '{"ionBean":"Chip"}'
+            tagName: ion-chip
+            ↓AttrColor [ngx.components.UIAttribute-1762012000317]: 
+              attrName: color
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: 'script:badge.color'
+            ↓Text [ngx.components.UIText-1762012000319]: 
+              textValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: 'script:badge.label'
         ↓TagSnapshot [ngx.components.UIElement-1761583001067]: 
           tagName: p
           ↓Text [ngx.components.UIText-1761583001069]: 
@@ -248,7 +336,33 @@ title: Thread Details
             textValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: plain:
+                - MobileSmartSourceType: 'script:this.stackFrames().length ? ''Frames · '' + this.stackFrames().length : ''No frames captured'''
+        ↓HeaderButtons [ngx.components.UIElement-1762012000321]: 
+          tagName: ion-buttons
+          ↓AttrSlot [ngx.components.UIAttribute-1762012000323]: 
+            attrName: slot
+            attrValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: plain:end
+          ↓CopyButton [ngx.components.UIDynamicElement-1762012000325]: 
+            beanData: '{"ionBean":"Button","Fill":"plain:clear"}'
+            tagName: ion-button
+            ↓Icon [ngx.components.UIDynamicElement-1762012000327]: 
+              beanData: '{"ionBean":"Icon","IconName":"plain:copy"}'
+              tagName: ion-icon
+            ↓Event [ngx.components.UIControlEvent-1762012000329]: 
+              ↓CopyAction [ngx.components.UICustomAction-1762012000331]: 
+                actionValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
+                    - com.twinsoft.convertigo.beans.common.FormatedContent: 
+                      →: |
+                        'try {
+                            this.copyFullStack();
+                        } finally {
+                            resolve();
+                        }'
       ↓CardContent [ngx.components.UIDynamicElement-1761583001083]: 
         beanData: '{"ionBean":"CardContent"}'
         tagName: ion-card-content
@@ -269,6 +383,37 @@ title: Thread Details
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
                     - MobileSmartSourceType: plain:Loading thread details…
+        ↓StackTextDirective [ngx.components.UIControlDirective-1762012000333]: 
+          directiveName: If
+          directiveSource: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+              - MobileSmartSourceType: script:this.detail() && this.stackFrames().length
+          ↓StackItem [ngx.components.UIDynamicElement-1762012000335]: 
+            beanData: '{"ionBean":"GenericItem","Lines":"plain:none"}'
+            tagName: ion-item
+            ↓Label [ngx.components.UIDynamicElement-1762012000337]: 
+              beanData: '{"ionBean":"Label"}'
+              tagName: ion-label
+              ↓AttrClass [ngx.components.UIAttribute-1762012000339]: 
+                attrName: class
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:threads-stack
+              ↓Pre [ngx.components.UIElement-1762012000341]: 
+                tagName: pre
+                ↓AttrStyle [ngx.components.UIAttribute-1762012000343]: 
+                  attrName: style
+                  attrValue: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                      - MobileSmartSourceType: plain:white-space: pre-wrap; margin: 0;
+                ↓Text [ngx.components.UIText-1762012000345]: 
+                  textValue: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                      - MobileSmartSourceType: script:this.stackAsText()
         ↓List [ngx.components.UIDynamicElement-1761583001085]: 
           beanData: '{"ionBean":"List"}'
           tagName: ion-list

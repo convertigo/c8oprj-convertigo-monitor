@@ -89,6 +89,18 @@ comment: Returns detailed information about a single JVM thread identified by it
         }
     }
     
+    var stackAsText = null;
+    if (stackTraceList.size() > 0) {
+        var stackBuilder = new java.lang.StringBuilder();
+        for (var sIdx = 0; sIdx < stackTraceList.size(); sIdx++) {
+            if (sIdx > 0) {
+                stackBuilder.append("\n");
+            }
+            stackBuilder.append(String(stackTraceList.get(sIdx)));
+        }
+        stackAsText = stackBuilder.toString();
+    }
+    
     var lockedMonitorsCount = 0;
     var lockedSynchronizersCount = 0;
     if (threadInfo != null) {
@@ -701,20 +713,33 @@ comment: Returns detailed information about a single JVM thread identified by it
                 - SmartType: 
                   - ↑mode: JS
                   - →→: item.getLineNumber()
-          ↓frameNative [steps.JsonFieldStep-1761584500127]: 
-            key: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: PLAIN
-                  - →→: native
-            type: bool
-            value: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: JS
-                  - →→: item.isNativeMethod()
+        ↓frameNative [steps.JsonFieldStep-1761584500127]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: native
+          type: bool
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: item.isNativeMethod()
+  ↓stackAsTextField [steps.JsonFieldStep-1762011000063]: 
+    key: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: PLAIN
+          - →→: stackAsText
+    value: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: JS
+          - →→: stackAsText
 ↓threadId [variables.RequestableVariable-1761584500129]: 
   comment: Target thread identifier
   description: Numeric identifier of the JVM thread to inspect.

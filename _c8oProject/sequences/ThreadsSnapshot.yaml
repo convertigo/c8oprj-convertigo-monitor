@@ -71,7 +71,113 @@ comment: Returns a detailed snapshot of JVM threads with optional name filtering
             matchedThreads++;
         }
     }
-    var totalThreads = threadInfos.size();'
+    var totalThreads = threadInfos.size();
+    var Comparator = Packages.java.util.Comparator;
+    var Collections = Packages.java.util.Collections;
+    var daemonThreads = 0;
+    var userThreads = 0;
+    var stateCounters = new java.util.HashMap();
+    var topCpuThreadsList = new java.util.ArrayList();
+    var topWaitThreadsList = new java.util.ArrayList();
+    var topBlockedThreadsList = new java.util.ArrayList();
+    var stackPreviewMap = new java.util.HashMap();
+    var previewLimit = 4;
+    for (var scanIdx = 0; scanIdx < threadInfos.size(); scanIdx++) {
+        var scanInfo = threadInfos.get(scanIdx);
+        if (scanInfo.isDaemon()) {
+            daemonThreads++;
+        } else {
+            userThreads++;
+        }
+        var stateName = scanInfo.getThreadState() != null ? String(scanInfo.getThreadState().name()) : "UNKNOWN";
+        var previousCount = stateCounters.containsKey(stateName) ? stateCounters.get(stateName).longValue() : 0;
+        stateCounters.put(stateName, java.lang.Long.valueOf(previousCount + 1));
+        var scanId = scanInfo.getThreadId();
+        var cpuNsValue = cpuSupported ? threadMx.getThreadCpuTime(scanId) : -1;
+        var cpuMillisValue = cpuNsValue >= 0 ? Math.floor(cpuNsValue / 1000000) : null;
+        if (cpuMillisValue !== null) {
+            var cpuEntry = new java.util.HashMap();
+            cpuEntry.put("id", java.lang.Long.valueOf(scanId));
+            cpuEntry.put("name", scanInfo.getThreadName());
+            cpuEntry.put("state", stateName);
+            cpuEntry.put("cpuTimeMillis", java.lang.Long.valueOf(cpuMillisValue));
+            topCpuThreadsList.add(cpuEntry);
+        }
+        var waitedMillisValue = scanInfo.getWaitedTime();
+        if (waitedMillisValue >= 0) {
+            var waitEntry = new java.util.HashMap();
+            waitEntry.put("id", java.lang.Long.valueOf(scanId));
+            waitEntry.put("name", scanInfo.getThreadName());
+            waitEntry.put("state", stateName);
+            waitEntry.put("waitedTimeMillis", java.lang.Long.valueOf(waitedMillisValue));
+            topWaitThreadsList.add(waitEntry);
+        }
+        var blockedMillisValue = scanInfo.getBlockedTime();
+        if (blockedMillisValue >= 0) {
+            var blockedEntry = new java.util.HashMap();
+            blockedEntry.put("id", java.lang.Long.valueOf(scanId));
+            blockedEntry.put("name", scanInfo.getThreadName());
+            blockedEntry.put("state", stateName);
+            blockedEntry.put("blockedTimeMillis", java.lang.Long.valueOf(blockedMillisValue));
+            topBlockedThreadsList.add(blockedEntry);
+        }
+        var traceFrames = scanInfo.getStackTrace();
+        if (traceFrames != null && traceFrames.length > 0) {
+            var builder = new java.lang.StringBuilder();
+            for (var frameIndex = 0; frameIndex < traceFrames.length && frameIndex < previewLimit; frameIndex++) {
+                if (frameIndex > 0) {
+                    builder.append("\n");
+                }
+                builder.append(String(traceFrames[frameIndex]));
+            }
+            if (traceFrames.length > previewLimit) {
+                builder.append("\n...");
+            }
+            stackPreviewMap.put(java.lang.Long.valueOf(scanId), builder.toString());
+        }
+    }
+    var cpuComparator = new Comparator({
+        compare: function(a, b) {
+            var va = a.containsKey("cpuTimeMillis") ? a.get("cpuTimeMillis").longValue() : -1;
+            var vb = b.containsKey("cpuTimeMillis") ? b.get("cpuTimeMillis").longValue() : -1;
+            if (va === vb) {
+                return 0;
+            }
+            return vb > va ? 1 : -1;
+        }
+    });
+    Collections.sort(topCpuThreadsList, cpuComparator);
+    while (topCpuThreadsList.size() > 5) {
+        topCpuThreadsList.remove(topCpuThreadsList.size() - 1);
+    }
+    var waitComparator = new Comparator({
+        compare: function(a, b) {
+            var va = a.containsKey("waitedTimeMillis") ? a.get("waitedTimeMillis").longValue() : -1;
+            var vb = b.containsKey("waitedTimeMillis") ? b.get("waitedTimeMillis").longValue() : -1;
+            if (va === vb) {
+                return 0;
+            }
+            return vb > va ? 1 : -1;
+        }
+    });
+    Collections.sort(topWaitThreadsList, waitComparator);
+    while (topWaitThreadsList.size() > 5) {
+        topWaitThreadsList.remove(topWaitThreadsList.size() - 1);
+    }
+    var blockedComparator = new Comparator({
+        compare: function(a, b) {
+            var va = a.containsKey("blockedTimeMillis") ? a.get("blockedTimeMillis").longValue() : -1;
+            var vb = b.containsKey("blockedTimeMillis") ? b.get("blockedTimeMillis").longValue() : -1;
+            if (va === vb) {
+                return 0;
+            }
+            return vb > va ? 1 : -1;
+        }
+    });
+    Collections.sort(topBlockedThreadsList, blockedComparator);
+    while (topBlockedThreadsList.size() > 5) {
+        topBlockedThreadsList.remove(topBlockedThreadsList.size() - 1);
+    }'
 ↓snapshot [steps.JsonObjectStep-1761314144005]: 
   comment: Snapshot metadata and thread list.
   key: 
@@ -121,6 +227,34 @@ comment: Returns a detailed snapshot of JVM threads with optional name filtering
         - SmartType: 
           - ↑mode: JS
           - →→: matchedThreads
+  ↓daemonThreadsField [steps.JsonFieldStep-1762011000001]: 
+    key: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: PLAIN
+          - →→: daemonThreads
+    type: number
+    value: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: JS
+          - →→: daemonThreads
+  ↓userThreadsField [steps.JsonFieldStep-1762011000003]: 
+    key: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: PLAIN
+          - →→: userThreads
+    type: number
+    value: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: JS
+          - →→: userThreads
   ↓cpuTimeEnabledField [steps.JsonFieldStep-1761314144013]: 
     key: 
       - xmlizable: 
@@ -177,6 +311,97 @@ comment: Returns a detailed snapshot of JVM threads with optional name filtering
         - SmartType: 
           - ↑mode: JS
           - →→: synchronizersSupported
+  ↓states [steps.JsonObjectStep-1762011000005]: 
+    key: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: PLAIN
+          - →→: states
+    ↓runnable [steps.JsonFieldStep-1762011000007]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: RUNNABLE
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: stateCounters.containsKey("RUNNABLE") ? stateCounters.get("RUNNABLE").longValue() : 0
+    ↓waiting [steps.JsonFieldStep-1762011000009]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: WAITING
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: stateCounters.containsKey("WAITING") ? stateCounters.get("WAITING").longValue() : 0
+    ↓timedWaiting [steps.JsonFieldStep-1762011000011]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: TIMED_WAITING
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: stateCounters.containsKey("TIMED_WAITING") ? stateCounters.get("TIMED_WAITING").longValue() : 0
+    ↓blocked [steps.JsonFieldStep-1762011000013]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: BLOCKED
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: stateCounters.containsKey("BLOCKED") ? stateCounters.get("BLOCKED").longValue() : 0
+    ↓newState [steps.JsonFieldStep-1762011000015]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: NEW
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: stateCounters.containsKey("NEW") ? stateCounters.get("NEW").longValue() : 0
+    ↓terminated [steps.JsonFieldStep-1762011000017]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: TERMINATED
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: stateCounters.containsKey("TERMINATED") ? stateCounters.get("TERMINATED").longValue() : 0
   ↓filter [steps.JsonObjectStep-1761314144021]: 
     key: 
       - xmlizable: 
@@ -674,6 +899,19 @@ comment: Returns a detailed snapshot of JVM threads with optional name filtering
                   - SmartType: 
                     - ↑mode: JS
                     - →→: null
+          ↓stackPreviewValue [steps.JsonFieldStep-1762011000019]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: stackPreview
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: stackPreviewMap.containsKey(java.lang.Long.valueOf(item.getThreadId())) ? stackPreviewMap.get(java.lang.Long.valueOf(item.getThreadId())) : null
           ↓lockedMonitorsCount [steps.JsonFieldStep-1761314144232]: 
             key: 
               - xmlizable: 
@@ -688,6 +926,216 @@ comment: Returns a detailed snapshot of JVM threads with optional name filtering
                 - SmartType: 
                   - ↑mode: JS
                   - →→: item.getLockedMonitors().length
+  ↓topCpuThreads [steps.JsonArrayStep-1762011000021]: 
+    key: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: PLAIN
+          - →→: topCpuThreads
+    ↓cpuIterator [steps.SimpleIteratorStep-1762011000023]: 
+      expression: topCpuThreadsList
+      ↓cpuThread [steps.JsonObjectStep-1762011000025]: 
+        key: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: PLAIN
+              - →→: thread
+        ↓cpuId [steps.JsonFieldStep-1762011000027]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: id
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: item.get("id")
+        ↓cpuName [steps.JsonFieldStep-1762011000029]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: name
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: item.get("name")
+        ↓cpuState [steps.JsonFieldStep-1762011000031]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: state
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: item.get("state")
+        ↓cpuValue [steps.JsonFieldStep-1762011000033]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: cpuTimeMillis
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: item.get("cpuTimeMillis")
+  ↓topWaitedThreads [steps.JsonArrayStep-1762011000035]: 
+    key: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: PLAIN
+          - →→: topWaitedThreads
+    ↓waitIterator [steps.SimpleIteratorStep-1762011000037]: 
+      expression: topWaitThreadsList
+      ↓waitThread [steps.JsonObjectStep-1762011000039]: 
+        key: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: PLAIN
+              - →→: thread
+        ↓waitId [steps.JsonFieldStep-1762011000041]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: id
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: item.get("id")
+        ↓waitName [steps.JsonFieldStep-1762011000043]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: name
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: item.get("name")
+        ↓waitState [steps.JsonFieldStep-1762011000045]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: state
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: item.get("state")
+        ↓waitValue [steps.JsonFieldStep-1762011000047]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: waitedTimeMillis
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: item.get("waitedTimeMillis")
+  ↓topBlockedThreads [steps.JsonArrayStep-1762011000049]: 
+    key: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: PLAIN
+          - →→: topBlockedThreads
+    ↓blockedIterator [steps.SimpleIteratorStep-1762011000051]: 
+      expression: topBlockedThreadsList
+      ↓blockedThread [steps.JsonObjectStep-1762011000053]: 
+        key: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: PLAIN
+              - →→: thread
+        ↓blockedId [steps.JsonFieldStep-1762011000055]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: id
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: item.get("id")
+        ↓blockedName [steps.JsonFieldStep-1762011000057]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: name
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: item.get("name")
+        ↓blockedState [steps.JsonFieldStep-1762011000059]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: state
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: item.get("state")
+        ↓blockedValue [steps.JsonFieldStep-1762011000061]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: blockedTimeMillis
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: item.get("blockedTimeMillis")
   ↓deadlockedThreadsField [steps.JsonFieldStep-1761578427939]: 
     key: 
       - xmlizable: 

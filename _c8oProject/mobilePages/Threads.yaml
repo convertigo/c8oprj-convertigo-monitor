@@ -32,10 +32,190 @@ scriptContent:
         		const txt = String(sample);
         		return txt.length > maxLength ? txt.slice(0, maxLength) + "…" : txt;
         	}
-        	public trackThread(index: number, thread: any) {
+        public trackThread(index: number, thread: any) {
         		return (thread && thread.id != null) ? thread.id : index;
         	}
-        /*End_c8o_PageFunction*/
+        	public sortMode = "cpu";
+        	public snapshot(): any {
+        		return (this.global && this.global.threadsSnapshot) ? this.global.threadsSnapshot : {};
+        	}
+        	public snapshotNumber(key: string): number {
+        		const snap = this.snapshot();
+        		if (snap && typeof snap[key] !== "undefined" && snap[key] !== null) {
+        			return Number(snap[key]);
+        		}
+        		return 0;
+        	}
+        	public stateEntries(): any[] {
+        		const states = this.snapshot().states || {};
+        		const labels: any = {
+        			"RUNNABLE": "Runnable",
+        			"WAITING": "Waiting",
+        			"TIMED_WAITING": "Timed waiting",
+        			"BLOCKED": "Blocked",
+        			"NEW": "New",
+        			"TERMINATED": "Terminated"
+        		};
+        		return Object.keys(labels).map((key) => ({
+        			key,
+        			label: labels[key],
+        			value: Number(states && typeof states[key] !== "undefined" ? states[key] : 0)
+        		}));
+        	}
+        	public sortOptions() {
+        		return [
+        			{ value: "cpu", label: "Top CPU" },
+        			{ value: "wait", label: "Top waits" },
+        			{ value: "blocked", label: "Top blocked" },
+        			{ value: "name", label: "Name A→Z" }
+        		];
+        	}
+        	public setSortMode(mode: string): void {
+        		if (!mode) {
+        			return;
+        		}
+        		this.sortMode = mode;
+        	}
+        	public threadCollection(): any[] {
+        		const snapshot = this.snapshot();
+        		const threads = snapshot && snapshot.threads ? snapshot.threads : [];
+        		return Array.isArray(threads) ? threads : [];
+        	}
+        	public sortedThreads(): any[] {
+        		const list = this.threadCollection().slice();
+        		const mode = this.sortMode || "cpu";
+        		const sortNumber = (key: string) => {
+        			list.sort((a: any, b: any) => {
+        				const av = Number(a && typeof a[key] !== "undefined" && a[key] !== null ? a[key] : 0);
+        				const bv = Number(b && typeof b[key] !== "undefined" && b[key] !== null ? b[key] : 0);
+        				if (av === bv) {
+        					return (a && a.id != null ? a.id : 0) - (b && b.id != null ? b.id : 0);
+        				}
+        				return bv - av;
+        			});
+        		};
+        		switch (mode) {
+        			case "wait":
+        				sortNumber("waitedTimeMillis");
+        				break;
+        			case "blocked":
+        				sortNumber("blockedTimeMillis");
+        				break;
+        			case "name":
+        				list.sort((a: any, b: any) => {
+        					const an = (a && a.name ? a.name : "").toLowerCase();
+        					const bn = (b && b.name ? b.name : "").toLowerCase();
+        					if (an === bn) {
+        						return (a && a.id != null ? a.id : 0) - (b && b.id != null ? b.id : 0);
+        					}
+        					return an > bn ? 1 : -1;
+        				});
+        				break;
+        			default:
+        				sortNumber("cpuTimeMillis");
+        				break;
+        		}
+        		return list;
+        	}
+        	public topCpuThreads(): any[] {
+        		const snapshot = this.snapshot();
+        		const list = snapshot && Array.isArray(snapshot.topCpuThreads) ? snapshot.topCpuThreads : [];
+        		return list.map((entry: any) => entry && entry.thread ? entry.thread : entry);
+        	}
+        	public topWaitThreads(): any[] {
+        		const snapshot = this.snapshot();
+        		const list = snapshot && Array.isArray(snapshot.topWaitedThreads) ? snapshot.topWaitedThreads : [];
+        		return list.map((entry: any) => entry && entry.thread ? entry.thread : entry);
+        	}
+        	public topBlockedThreads(): any[] {
+        		const snapshot = this.snapshot();
+        		const list = snapshot && Array.isArray(snapshot.topBlockedThreads) ? snapshot.topBlockedThreads : [];
+        		return list.map((entry: any) => entry && entry.thread ? entry.thread : entry);
+        	}
+        	public colorForState(state: string): string {
+        		switch (state) {
+        			case "RUNNABLE":
+        				return "success";
+        			case "WAITING":
+        				return "tertiary";
+        			case "TIMED_WAITING":
+        				return "warning";
+        			case "BLOCKED":
+        				return "danger";
+        			case "TERMINATED":
+        				return "medium";
+        			default:
+        				return "medium";
+        		}
+        	}
+        	public threadHeaderColor(thread: any): string {
+        		if (thread && thread.deadlocked) {
+        			return "danger";
+        		}
+        		return this.colorForState(thread && thread.state ? thread.state : "");
+        	}
+        	public threadTitle(thread: any): string {
+        		if (thread && thread.name) {
+        			return String(thread.name);
+        		}
+        		if (thread && thread.id != null) {
+        			return "Thread #" + thread.id;
+        		}
+        		return "Unknown thread";
+        	}
+        	public threadSubtitle(thread: any): string {
+        		const state = thread && thread.state ? thread.state : "unknown";
+        		const cpu = this.formatMillis(thread && thread.cpuTimeMillis);
+        		const wait = this.formatMillis(thread && thread.waitedTimeMillis);
+        		return "State · " + state + " · CPU " + cpu + " · Waited " + wait;
+        	}
+        	public threadBadges(thread: any): any[] {
+        		if (!thread) {
+        			return [];
+        		}
+        		const badges: any[] = [];
+        		if (thread.deadlocked) {
+        			badges.push({ label: "Deadlocked", color: "danger" });
+        		}
+        		if (thread.daemon) {
+        			badges.push({ label: "Daemon", color: "medium" });
+        		}
+        		if (thread.suspended) {
+        			badges.push({ label: "Suspended", color: "warning" });
+        		}
+        		if (thread.inNative) {
+        			badges.push({ label: "Native", color: "tertiary" });
+        		}
+        		return badges;
+        	}
+        	public stackPreviewText(thread: any): string {
+        		if (!thread) {
+        			return "No stack sample available.";
+        		}
+        		if (thread.stackPreview) {
+        			return String(thread.stackPreview);
+        		}
+        		if (thread.stackSample) {
+        			return String(thread.stackSample);
+        		}
+        		return "No stack sample available.";
+        	}
+        	public copyStackPreview(thread: any): void {
+        		const text = this.stackPreviewText(thread);
+        		if (!text) {
+        			return;
+        		}
+        		try {
+        			if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+        				navigator.clipboard.writeText(text);
+        			}
+        		} catch (error) {
+        			if (this.c8o && this.c8o.log && this.c8o.log.warn) {
+        				this.c8o.log.warn("[Threads] copyStackPreview failed", error);
+        			}
+        		}
+        	}
+        	/*End_c8o_PageFunction*/
         '
 segment: threads
 title: Threads
@@ -74,111 +254,551 @@ title: Threads
 ↓Content [ngx.components.UIDynamicElement-1761575995375]: 
   beanData: '{"ionBean":"Content"}'
   tagName: ion-content
-  ↓CardContainer [ngx.components.UIDynamicElement-1761575995377]: 
+  ↓SummaryCard [ngx.components.UIDynamicElement-1762012000001]: 
     beanData: '{"ionBean":"Card"}'
     tagName: ion-card
-    ↓CardHeader [ngx.components.UIDynamicElement-1761575995379]: 
+    ↓CardHeader [ngx.components.UIDynamicElement-1762012000003]: 
       beanData: '{"ionBean":"CardHeader"}'
       tagName: ion-card-header
-      ↓CardTitle [ngx.components.UIDynamicElement-1761575995381]: 
+      ↓CardTitle [ngx.components.UIDynamicElement-1762012000005]: 
         beanData: '{"ionBean":"CardTitle"}'
         tagName: ion-card-title
-        ↓Text [ngx.components.UIText-1761575995383]: 
+        ↓Text [ngx.components.UIText-1762012000007]: 
           textValue: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-              - MobileSmartSourceType: plain:Snapshot
-      ↓CardSubTitle [ngx.components.UIDynamicElement-1761575995385]: 
+              - MobileSmartSourceType: plain:Threads overview
+      ↓CardSubTitle [ngx.components.UIDynamicElement-1762012000009]: 
         beanData: '{"ionBean":"CardSubTitle"}'
         tagName: ion-card-subtitle
-        ↓Text [ngx.components.UIText-1761575995387]: 
+        ↓Text [ngx.components.UIText-1762012000011]: 
           textValue: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-              - MobileSmartSourceType: script:this.formatTimestamp(this.global.threadsSnapshot && this.global.threadsSnapshot.capturedAt)
-    ↓CardContent [ngx.components.UIDynamicElement-1761575995389]: 
+              - MobileSmartSourceType: 'script:''Snapshot · '' + this.formatTimestamp(this.snapshot().capturedAt)'
+    ↓CardContent [ngx.components.UIDynamicElement-1762012000013]: 
       beanData: '{"ionBean":"CardContent"}'
       tagName: ion-card-content
-      ↓TextItem [ngx.components.UIDynamicElement-1761575995391]: 
-        beanData: '{"ionBean":"TextItem"}'
-        tagName: ion-text
-        ↓Text [ngx.components.UIText-1761575995393]: 
+      ↓Grid [ngx.components.UIElement-1762012000015]: 
+        tagName: ion-grid
+        ↓RowPrimary [ngx.components.UIElement-1762012000017]: 
+          tagName: ion-row
+          ↓TotalCol [ngx.components.UIElement-1762012000019]: 
+            tagName: ion-col
+            ↓AttrSize [ngx.components.UIAttribute-1762012000021]: 
+              attrName: size
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:6
+            ↓AttrSizeMd [ngx.components.UIAttribute-1762012000023]: 
+              attrName: size-md
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:3
+            ↓Label [ngx.components.UIDynamicElement-1762012000025]: 
+              beanData: '{"ionBean":"TextItem","Wrap":"plain:true"}'
+              tagName: ion-text
+              ↓Text [ngx.components.UIText-1762012000027]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Total threads
+            ↓Value [ngx.components.UIElement-1762012000029]: 
+              tagName: h2
+              ↓Text [ngx.components.UIText-1762012000031]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:this.formatCount(this.snapshotNumber("totalThreads"))'
+          ↓MatchedCol [ngx.components.UIElement-1762012000033]: 
+            tagName: ion-col
+            ↓AttrSize [ngx.components.UIAttribute-1762012000035]: 
+              attrName: size
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:6
+            ↓AttrSizeMd [ngx.components.UIAttribute-1762012000037]: 
+              attrName: size-md
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:3
+            ↓Label [ngx.components.UIDynamicElement-1762012000039]: 
+              beanData: '{"ionBean":"TextItem","Wrap":"plain:true"}'
+              tagName: ion-text
+              ↓Text [ngx.components.UIText-1762012000041]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Matched threads
+            ↓Value [ngx.components.UIElement-1762012000043]: 
+              tagName: h2
+              ↓Text [ngx.components.UIText-1762012000045]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:this.formatCount(this.snapshotNumber("matchedThreads"))'
+          ↓DaemonCol [ngx.components.UIElement-1762012000047]: 
+            tagName: ion-col
+            ↓AttrSize [ngx.components.UIAttribute-1762012000049]: 
+              attrName: size
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:6
+            ↓AttrSizeMd [ngx.components.UIAttribute-1762012000051]: 
+              attrName: size-md
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:3
+            ↓Label [ngx.components.UIDynamicElement-1762012000053]: 
+              beanData: '{"ionBean":"TextItem","Wrap":"plain:true"}'
+              tagName: ion-text
+              ↓Text [ngx.components.UIText-1762012000055]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Daemon threads
+            ↓Value [ngx.components.UIElement-1762012000057]: 
+              tagName: h2
+              ↓Text [ngx.components.UIText-1762012000059]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:this.formatCount(this.snapshotNumber("daemonThreads"))'
+          ↓DeadlockedCol [ngx.components.UIElement-1762012000061]: 
+            tagName: ion-col
+            ↓AttrSize [ngx.components.UIAttribute-1762012000063]: 
+              attrName: size
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:6
+            ↓AttrSizeMd [ngx.components.UIAttribute-1762012000065]: 
+              attrName: size-md
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:3
+            ↓Label [ngx.components.UIDynamicElement-1762012000067]: 
+              beanData: '{"ionBean":"TextItem","Wrap":"plain:true"}'
+              tagName: ion-text
+              ↓Text [ngx.components.UIText-1762012000069]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Deadlocked
+            ↓Value [ngx.components.UIElement-1762012000071]: 
+              tagName: h2
+              ↓Text [ngx.components.UIText-1762012000073]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:this.formatCount(this.snapshotNumber("deadlockedThreads"))'
+        ↓RowStates [ngx.components.UIElement-1762012000075]: 
+          tagName: ion-row
+          ↓StatesDirective [ngx.components.UIControlDirective-1762012000077]: 
+            directiveExpression: 'let state of this.stateEntries()'
+            directiveIndexName: sIdx
+            directiveItemName: state
+            ↓StateCol [ngx.components.UIElement-1762012000079]: 
+              tagName: ion-col
+              ↓AttrSize [ngx.components.UIAttribute-1762012000081]: 
+                attrName: size
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:6
+              ↓AttrSizeMd [ngx.components.UIAttribute-1762012000083]: 
+                attrName: size-md
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:2
+              ↓Chip [ngx.components.UIDynamicElement-1762012000085]: 
+                beanData: '{"ionBean":"Chip"}'
+                tagName: ion-chip
+                ↓AttrColor [ngx.components.UIAttribute-1762012000087]: 
+                  attrName: color
+                  attrValue: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                      - MobileSmartSourceType: 'script:this.colorForState(state.key)'
+                ↓Text [ngx.components.UIText-1762012000089]: 
+                  textValue: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                      - MobileSmartSourceType: 'script:state.label + '' · '' + this.formatCount(state.value)'
+        ↓FilterRow [ngx.components.UIElement-1762012000091]: 
+          tagName: ion-row
+          ↓FilterCol [ngx.components.UIElement-1762012000093]: 
+            tagName: ion-col
+            ↓AttrSize [ngx.components.UIAttribute-1762012000095]: 
+              attrName: size
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:12
+            ↓Chip [ngx.components.UIDynamicElement-1762012000097]: 
+              beanData: '{"ionBean":"Chip"}'
+              tagName: ion-chip
+              ↓AttrColor [ngx.components.UIAttribute-1762012000099]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:(this.snapshot().filter && this.snapshot().filter.applied) ? ''primary'' : ''medium'''
+              ↓Text [ngx.components.UIText-1762012000101]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:(this.snapshot().filter && this.snapshot().filter.applied ? ''Filter · '' + (this.snapshot().filter.pattern || this.snapshot().filter.input || ''(regex)'') : ''Filter inactive'')'
+  ↓HotCard [ngx.components.UIDynamicElement-1762012000103]: 
+    beanData: '{"ionBean":"Card"}'
+    tagName: ion-card
+    ↓CardHeader [ngx.components.UIDynamicElement-1762012000105]: 
+      beanData: '{"ionBean":"CardHeader"}'
+      tagName: ion-card-header
+      ↓CardTitle [ngx.components.UIDynamicElement-1762012000107]: 
+        beanData: '{"ionBean":"CardTitle"}'
+        tagName: ion-card-title
+        ↓Text [ngx.components.UIText-1762012000109]: 
           textValue: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-              - MobileSmartSourceType: script:'Total threads · ' + this.formatCount(this.global.threadsSnapshot && this.global.threadsSnapshot.totalThreads)
-      ↓TextItem1 [ngx.components.UIDynamicElement-1761575995395]: 
-        beanData: '{"ionBean":"TextItem"}'
-        tagName: ion-text
-        ↓Text [ngx.components.UIText-1761575995397]: 
+              - MobileSmartSourceType: plain:Hot spots
+      ↓CardSubTitle [ngx.components.UIDynamicElement-1762012000111]: 
+        beanData: '{"ionBean":"CardSubTitle"}'
+        tagName: ion-card-subtitle
+        ↓Text [ngx.components.UIText-1762012000113]: 
           textValue: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-              - MobileSmartSourceType: script:'Matched · ' + this.formatCount(this.global.threadsSnapshot && this.global.threadsSnapshot.matchedThreads)
-      ↓TextItem2 [ngx.components.UIDynamicElement-1761575995399]: 
-        beanData: '{"ionBean":"TextItem"}'
-        tagName: ion-text
-        ↓Text [ngx.components.UIText-1761575995401]: 
-          textValue: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-              - MobileSmartSourceType: script:'Deadlocked · ' + this.formatCount(this.global.threadsSnapshot && this.global.threadsSnapshot.deadlockedThreads)
-      ↓TextItem3 [ngx.components.UIDynamicElement-1761575995403]: 
-        beanData: '{"ionBean":"TextItem"}'
-        tagName: ion-text
-        ↓Text [ngx.components.UIText-1761575995405]: 
-          textValue: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-              - MobileSmartSourceType: 'script:''CPU time '' + (this.global.threadsSnapshot && this.global.threadsSnapshot.cpuTimeEnabled ? ''enabled'' : ''disabled'') + '' · Contention '' + (this.global.threadsSnapshot && this.global.threadsSnapshot.contentionMonitoringEnabled ? ''enabled'' : ''disabled'')'
-  ↓FormItem [ngx.components.UIDynamicElement-1761575995407]: 
-    beanData: '{"ionBean":"FormItem"}'
-    tagName: ion-item
-    ↓SearchBar [ngx.components.UIDynamicElement-1761575995409]: 
-      beanData: |
-        '{
-         "ionBean": "Searchbar",
-         "ControlName": "plain:name1761575995409",
-         "placeholder": "plain:Filter threads (regex)"
-        }'
-      tagName: ion-searchbar
-      ↓Event [ngx.components.UIControlEvent-1761575995411]: 
-        attrName: (ionChange)
-        eventName: ionChange
-        ↓SetGlobal [ngx.components.UIDynamicAction-1761575995413]: 
+              - MobileSmartSourceType: plain:Top resource consumers
+    ↓CardContent [ngx.components.UIDynamicElement-1762012000115]: 
+      beanData: '{"ionBean":"CardContent"}'
+      tagName: ion-card-content
+      ↓Grid [ngx.components.UIElement-1762012000117]: 
+        tagName: ion-grid
+        ↓Row [ngx.components.UIElement-1762012000119]: 
+          tagName: ion-row
+          ↓CpuCol [ngx.components.UIElement-1762012000121]: 
+            tagName: ion-col
+            ↓AttrSize [ngx.components.UIAttribute-1762012000123]: 
+              attrName: size
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:12
+            ↓AttrSizeMd [ngx.components.UIAttribute-1762012000125]: 
+              attrName: size-md
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:4
+            ↓Title [ngx.components.UIDynamicElement-1762012000127]: 
+              beanData: '{"ionBean":"TextItem","Wrap":"plain:true"}'
+              tagName: ion-text
+              ↓Text [ngx.components.UIText-1762012000129]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Top CPU
+            ↓List [ngx.components.UIDynamicElement-1762012000131]: 
+              beanData: '{"ionBean":"List"}'
+              tagName: ion-list
+              ↓Directive [ngx.components.UIControlDirective-1762012000133]: 
+                directiveExpression: 'let entry of this.topCpuThreads(); index as idx'
+                directiveIndexName: cIdx
+                directiveItemName: entry
+                ↓Item [ngx.components.UIDynamicElement-1762012000135]: 
+                  beanData: '{"ionBean":"ListItem","Lines":"plain:inset"}'
+                  tagName: ion-item
+                  ↓Label [ngx.components.UIDynamicElement-1762012000137]: 
+                    beanData: '{"ionBean":"Label"}'
+                    tagName: ion-label
+                    ↓Header [ngx.components.UIElement-1762012000139]: 
+                      tagName: h3
+                      ↓Text [ngx.components.UIText-1762012000141]: 
+                        textValue: 
+                          - xmlizable: 
+                            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                            - MobileSmartSourceType: 'script:''#'' + (idx + 1) + '' · '' + (entry && entry.name ? entry.name : ''Thread #'' + (entry && entry.id != null ? entry.id : ''?''))'
+                    ↓Summary [ngx.components.UIElement-1762012000143]: 
+                      tagName: p
+                      ↓Text [ngx.components.UIText-1762012000145]: 
+                        textValue: 
+                          - xmlizable: 
+                            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                            - MobileSmartSourceType: 'script:''CPU '' + this.formatMillis(entry && entry.cpuTimeMillis)'
+                  ↓StateBadge [ngx.components.UIDynamicElement-1762012000147]: 
+                    beanData: '{"ionBean":"Badge","Color":"script:this.colorForState(entry && entry.state)"}'
+                    tagName: ion-badge
+                    ↓Text [ngx.components.UIText-1762012000149]: 
+                      textValue: 
+                        - xmlizable: 
+                          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                          - MobileSmartSourceType: 'script:entry && entry.state ? entry.state : ''Unknown'''
+              ↓Placeholder [ngx.components.UIControlDirective-1762012000151]: 
+                directiveName: If
+                directiveSource: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:!this.topCpuThreads().length'
+                ↓Item [ngx.components.UIDynamicElement-1762012000153]: 
+                  beanData: '{"ionBean":"ListItem","Lines":"plain:none"}'
+                  tagName: ion-item
+                  ↓Label [ngx.components.UIDynamicElement-1762012000155]: 
+                    beanData: '{"ionBean":"Label"}'
+                    tagName: ion-label
+                    ↓Text [ngx.components.UIText-1762012000157]: 
+                      textValue: 
+                        - xmlizable: 
+                          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                          - MobileSmartSourceType: plain:CPU metrics unavailable.
+          ↓WaitCol [ngx.components.UIElement-1762012000159]: 
+            tagName: ion-col
+            ↓AttrSize [ngx.components.UIAttribute-1762012000161]: 
+              attrName: size
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:12
+            ↓AttrSizeMd [ngx.components.UIAttribute-1762012000163]: 
+              attrName: size-md
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:4
+            ↓Title [ngx.components.UIDynamicElement-1762012000165]: 
+              beanData: '{"ionBean":"TextItem","Wrap":"plain:true"}'
+              tagName: ion-text
+              ↓Text [ngx.components.UIText-1762012000167]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Top waits
+            ↓List [ngx.components.UIDynamicElement-1762012000169]: 
+              beanData: '{"ionBean":"List"}'
+              tagName: ion-list
+              ↓Directive [ngx.components.UIControlDirective-1762012000171]: 
+                directiveExpression: 'let entry of this.topWaitThreads(); index as idx'
+                directiveIndexName: wIdx
+                directiveItemName: entry
+                ↓Item [ngx.components.UIDynamicElement-1762012000173]: 
+                  beanData: '{"ionBean":"ListItem","Lines":"plain:inset"}'
+                  tagName: ion-item
+                  ↓Label [ngx.components.UIDynamicElement-1762012000175]: 
+                    beanData: '{"ionBean":"Label"}'
+                    tagName: ion-label
+                    ↓Header [ngx.components.UIElement-1762012000177]: 
+                      tagName: h3
+                      ↓Text [ngx.components.UIText-1762012000179]: 
+                        textValue: 
+                          - xmlizable: 
+                            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                            - MobileSmartSourceType: 'script:''#'' + (idx + 1) + '' · '' + (entry && entry.name ? entry.name : ''Thread #'' + (entry && entry.id != null ? entry.id : ''?''))'
+                    ↓Summary [ngx.components.UIElement-1762012000181]: 
+                      tagName: p
+                      ↓Text [ngx.components.UIText-1762012000183]: 
+                        textValue: 
+                          - xmlizable: 
+                            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                            - MobileSmartSourceType: 'script:''Waited '' + this.formatMillis(entry && entry.waitedTimeMillis)'
+                  ↓StateBadge [ngx.components.UIDynamicElement-1762012000185]: 
+                    beanData: '{"ionBean":"Badge","Color":"script:this.colorForState(entry && entry.state)"}'
+                    tagName: ion-badge
+                    ↓Text [ngx.components.UIText-1762012000187]: 
+                      textValue: 
+                        - xmlizable: 
+                          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                          - MobileSmartSourceType: 'script:entry && entry.state ? entry.state : ''Unknown'''
+              ↓Placeholder [ngx.components.UIControlDirective-1762012000189]: 
+                directiveName: If
+                directiveSource: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:!this.topWaitThreads().length'
+                ↓Item [ngx.components.UIDynamicElement-1762012000191]: 
+                  beanData: '{"ionBean":"ListItem","Lines":"plain:none"}'
+                  tagName: ion-item
+                  ↓Label [ngx.components.UIDynamicElement-1762012000193]: 
+                    beanData: '{"ionBean":"Label"}'
+                    tagName: ion-label
+                    ↓Text [ngx.components.UIText-1762012000195]: 
+                      textValue: 
+                        - xmlizable: 
+                          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                          - MobileSmartSourceType: plain:Wait metrics unavailable.
+          ↓BlockedCol [ngx.components.UIElement-1762012000197]: 
+            tagName: ion-col
+            ↓AttrSize [ngx.components.UIAttribute-1762012000199]: 
+              attrName: size
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:12
+            ↓AttrSizeMd [ngx.components.UIAttribute-1762012000201]: 
+              attrName: size-md
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:4
+            ↓Title [ngx.components.UIDynamicElement-1762012000203]: 
+              beanData: '{"ionBean":"TextItem","Wrap":"plain:true"}'
+              tagName: ion-text
+              ↓Text [ngx.components.UIText-1762012000205]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Top blocked
+            ↓List [ngx.components.UIDynamicElement-1762012000207]: 
+              beanData: '{"ionBean":"List"}'
+              tagName: ion-list
+              ↓Directive [ngx.components.UIControlDirective-1762012000209]: 
+                directiveExpression: 'let entry of this.topBlockedThreads(); index as idx'
+                directiveIndexName: bIdx
+                directiveItemName: entry
+                ↓Item [ngx.components.UIDynamicElement-1762012000211]: 
+                  beanData: '{"ionBean":"ListItem","Lines":"plain:inset"}'
+                  tagName: ion-item
+                  ↓Label [ngx.components.UIDynamicElement-1762012000213]: 
+                    beanData: '{"ionBean":"Label"}'
+                    tagName: ion-label
+                    ↓Header [ngx.components.UIElement-1762012000215]: 
+                      tagName: h3
+                      ↓Text [ngx.components.UIText-1762012000217]: 
+                        textValue: 
+                          - xmlizable: 
+                            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                            - MobileSmartSourceType: 'script:''#'' + (idx + 1) + '' · '' + (entry && entry.name ? entry.name : ''Thread #'' + (entry && entry.id != null ? entry.id : ''?''))'
+                    ↓Summary [ngx.components.UIElement-1762012000219]: 
+                      tagName: p
+                      ↓Text [ngx.components.UIText-1762012000221]: 
+                        textValue: 
+                          - xmlizable: 
+                            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                            - MobileSmartSourceType: 'script:''Blocked '' + this.formatMillis(entry && entry.blockedTimeMillis)'
+                  ↓StateBadge [ngx.components.UIDynamicElement-1762012000223]: 
+                    beanData: '{"ionBean":"Badge","Color":"script:this.colorForState(entry && entry.state)"}'
+                    tagName: ion-badge
+                    ↓Text [ngx.components.UIText-1762012000225]: 
+                      textValue: 
+                        - xmlizable: 
+                          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                          - MobileSmartSourceType: 'script:entry && entry.state ? entry.state : ''Unknown'''
+              ↓Placeholder [ngx.components.UIControlDirective-1762012000227]: 
+                directiveName: If
+                directiveSource: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:!this.topBlockedThreads().length'
+                ↓Item [ngx.components.UIDynamicElement-1762012000229]: 
+                  beanData: '{"ionBean":"ListItem","Lines":"plain:none"}'
+                  tagName: ion-item
+                  ↓Label [ngx.components.UIDynamicElement-1762012000231]: 
+                    beanData: '{"ionBean":"Label"}'
+                    tagName: ion-label
+                    ↓Text [ngx.components.UIText-1762012000233]: 
+                      textValue: 
+                        - xmlizable: 
+                          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                          - MobileSmartSourceType: plain:Block metrics unavailable.
+  ↓ControlsCard [ngx.components.UIDynamicElement-1762012000235]: 
+    beanData: '{"ionBean":"Card"}'
+    tagName: ion-card
+    ↓CardContent [ngx.components.UIDynamicElement-1762012000237]: 
+      beanData: '{"ionBean":"CardContent"}'
+      tagName: ion-card-content
+      ↓SearchItem [ngx.components.UIDynamicElement-1762012000239]: 
+        beanData: '{"ionBean":"FormItem"}'
+        tagName: ion-item
+        ↓SearchBar [ngx.components.UIDynamicElement-1762012000241]: 
           beanData: |
             '{
-             "ionBean": "SetGlobalAction",
-             "Property": "plain:threadsFilter",
-             "Value": "script:(event && event.detail && event.detail.value ? event.detail.value.trim() : '''')"
+             "ionBean": "Searchbar",
+             "ControlName": "plain:threadsFilterSearch",
+             "placeholder": "plain:Filter threads (regex)"
             }'
-        ↓PublishEvent [ngx.components.UIDynamicAction-1761575995415]: 
-          beanData: '{"ionBean":"PublishEventAction","topic":"plain:refreshThreads"}'
-    ↓Note [ngx.components.UIDynamicElement-1761575995417]: 
-      beanData: '{"ionBean":"Note"}'
-      tagName: ion-note
-      ↓Attr [ngx.components.UIAttribute-1761575995419]: 
-        attrName: slot
-        attrValue: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-            - MobileSmartSourceType: plain:end
-      ↓Text [ngx.components.UIText-1761575995421]: 
-        textValue: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-            - MobileSmartSourceType: 'script:''Matches: '' + this.formatCount(this.global.threadsSnapshot && this.global.threadsSnapshot.matchedThreads)'
+          tagName: ion-searchbar
+          ↓Event [ngx.components.UIControlEvent-1762012000243]: 
+            attrName: (ionChange)
+            eventName: ionChange
+            ↓SetGlobal [ngx.components.UIDynamicAction-1762012000245]: 
+              beanData: |
+                '{
+                 "ionBean": "SetGlobalAction",
+                 "Property": "plain:threadsFilter",
+                 "Value": "script:(event && event.detail && event.detail.value ? event.detail.value.trim() : '''')"
+                }'
+            ↓PublishEvent [ngx.components.UIDynamicAction-1762012000247]: 
+              beanData: '{"ionBean":"PublishEventAction","topic":"plain:refreshThreads"}'
+      ↓SortItem [ngx.components.UIDynamicElement-1762012000249]: 
+        beanData: '{"ionBean":"GenericItem","Lines":"plain:none"}'
+        tagName: ion-item
+        ↓Label [ngx.components.UIDynamicElement-1762012000251]: 
+          beanData: '{"ionBean":"Label"}'
+          tagName: ion-label
+          ↓Text [ngx.components.UIText-1762012000253]: 
+            textValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: plain:Sort threads
+        ↓Segment [ngx.components.UIDynamicElement-1762012000255]: 
+          beanData: '{"ionBean":"Segment"}'
+          tagName: ion-segment
+          ↓AttrValue [ngx.components.UIAttribute-1762012000257]: 
+            attrName: value
+            attrValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:this.sortMode'
+          ↓Event [ngx.components.UIControlEvent-1762012000259]: 
+            attrName: (ionChange)
+            eventName: ionChange
+            ↓SetSort [ngx.components.UICustomAction-1762012000261]: 
+              actionValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
+                  - com.twinsoft.convertigo.beans.common.FormatedContent: 
+                    →: |
+                      'try {
+                          var mode = event && event.detail ? event.detail.value : null;
+                          if (mode) {
+                              this.setSortMode(mode);
+                          }
+                      } finally {
+                          resolve();
+                      }'
+          ↓OptionsDirective [ngx.components.UIControlDirective-1762012000263]: 
+            directiveExpression: 'let option of this.sortOptions()'
+            directiveIndexName: optIdx
+            directiveItemName: option
+            ↓Button [ngx.components.UIDynamicElement-1762012000265]: 
+              beanData: '{"ionBean":"SegmentButton"}'
+              tagName: ion-segment-button
+              ↓AttrValue [ngx.components.UIAttribute-1762012000267]: 
+                attrName: value
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:option.value'
+              ↓Text [ngx.components.UIText-1762012000269]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:option.label'
   ↓ListContainer [ngx.components.UIDynamicElement-1761575995423]: 
     beanData: '{"ionBean":"List"}'
     tagName: ion-list
     ↓Directive [ngx.components.UIControlDirective-1761575995425]: 
-      directiveExpression: '; trackBy: trackThread'
+      directiveExpression: 'let thread of this.sortedThreads(); index as idx; trackBy: trackThread'
       directiveIndexName: idx
       directiveItemName: thread
-      directiveSource: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: 'script:(this.global.threadsSnapshot && this.global.threadsSnapshot.threads ? this.global.threadsSnapshot.threads : [])'
       ↓ListItem [ngx.components.UIDynamicElement-1761575995427]: 
         beanData: '{"ionBean":"ListItem","Lines":"plain:full"}'
         tagName: ion-item
@@ -187,108 +807,150 @@ title: Threads
           attrValue: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-              - MobileSmartSourceType: 'script:thread && thread.deadlocked ? ''danger'' : '''''
+              - MobileSmartSourceType: 'script:this.threadHeaderColor(thread)'
         ↓Label [ngx.components.UIDynamicElement-1761575995431]: 
           beanData: '{"ionBean":"Label"}'
           tagName: ion-label
-          ↓Tag [ngx.components.UIElement-1761575995433]: 
+          ↓Header [ngx.components.UIElement-1762012000271]: 
             tagName: h2
-            ↓Text [ngx.components.UIText-1761575995435]: 
+            ↓Text [ngx.components.UIText-1762012000273]: 
               textValue: 
                 - xmlizable: 
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                  - MobileSmartSourceType: 'script:thread && thread.name ? thread.name : (''Thread #'' + (thread && thread.id != null ? thread.id : ''n/a''))'
-          ↓Tag1 [ngx.components.UIElement-1761575995437]: 
+                  - MobileSmartSourceType: 'script:this.threadTitle(thread)'
+          ↓Meta [ngx.components.UIElement-1762012000275]: 
             tagName: p
-            ↓Text [ngx.components.UIText-1761575995439]: 
+            ↓Text [ngx.components.UIText-1762012000277]: 
               textValue: 
                 - xmlizable: 
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                  - MobileSmartSourceType: 'script:''State · '' + (thread && thread.state ? thread.state : ''unknown'') + '' · CPU '' + this.formatMillis(thread && thread.cpuTimeMillis) + '' · Waited '' + this.formatMillis(thread && thread.waitedTimeMillis)'
-          ↓Tag2 [ngx.components.UIElement-1761575995441]: 
+                  - MobileSmartSourceType: 'script:this.threadSubtitle(thread)'
+          ↓Badges [ngx.components.UIControlDirective-1762012000279]: 
+            directiveExpression: 'let badge of this.threadBadges(thread)'
+            directiveIndexName: badgeIdx
+            directiveItemName: badge
+            ↓Chip [ngx.components.UIDynamicElement-1762012000281]: 
+              beanData: '{"ionBean":"Chip"}'
+              tagName: ion-chip
+              ↓AttrColor [ngx.components.UIAttribute-1762012000283]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:badge.color'
+              ↓Text [ngx.components.UIText-1762012000285]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:badge.label'
+          ↓Metrics [ngx.components.UIElement-1762012000287]: 
             tagName: p
-            ↓Text [ngx.components.UIText-1761575995443]: 
+            ↓Text [ngx.components.UIText-1762012000289]: 
               textValue: 
                 - xmlizable: 
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                  - MobileSmartSourceType: 'script:''Lock · '' + (thread && thread.lockName ? thread.lockName : ''—'')'
-          ↓Tag3 [ngx.components.UIElement-1761575995445]: 
+                  - MobileSmartSourceType: 'script:''CPU '' + this.formatMillis(thread && thread.cpuTimeMillis) + '' · User '' + this.formatMillis(thread && thread.userTimeMillis) + '' · Waited '' + this.formatMillis(thread && thread.waitedTimeMillis)'
+          ↓Locks [ngx.components.UIElement-1762012000291]: 
             tagName: p
-            ↓Text [ngx.components.UIText-1761575995447]: 
+            ↓Text [ngx.components.UIText-1762012000293]: 
               textValue: 
                 - xmlizable: 
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                  - MobileSmartSourceType: script:this.truncateSample(thread && thread.stackSample)
-        ↓DetailsButton [ngx.components.UIDynamicElement-1761583600001]: 
-          beanData: '{"ionBean":"Button"}'
-          tagName: ion-button
-          ↓Attr [ngx.components.UIAttribute-1761583600003]: 
+                  - MobileSmartSourceType: 'script:''Locks '' + this.formatCount(thread && thread.lockedMonitors) + '' · Blocked '' + this.formatCount(thread && thread.blockedCount)'
+          ↓StackPreview [ngx.components.UIElement-1762012000295]: 
+            tagName: pre
+            ↓Attr [ngx.components.UIAttribute-1762012000297]: 
+              attrName: style
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:margin: 8px 0; white-space: pre-wrap;
+            ↓Text [ngx.components.UIText-1762012000299]: 
+              textValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: 'script:this.stackPreviewText(thread)'
+        ↓ButtonGroup [ngx.components.UIElement-1762012000301]: 
+          tagName: ion-buttons
+          ↓AttrSlot [ngx.components.UIAttribute-1762012000303]: 
             attrName: slot
             attrValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
                 - MobileSmartSourceType: plain:end
-          ↓Icon [ngx.components.UIDynamicElement-1761583600005]: 
-            beanData: '{"ionBean":"Icon","IconName":"plain:arrow-forward"}'
-            tagName: ion-icon
-          ↓Event [ngx.components.UIControlEvent-1761583600007]: 
-            ↓SetSelectedThread [ngx.components.UIDynamicAction-1761583600009]: 
-              beanData: |
-                '{
-                 "ionBean": "SetGlobalAction",
-                 "Property": "plain:selectedThread",
-                 "Value": "script:thread ? JSON.parse(JSON.stringify(thread)) : null"
-                }'
-            ↓ResetThreadDetails [ngx.components.UIDynamicAction-1761584001001]: 
-              beanData: |
-                '{
-                 "ionBean": "SetGlobalAction",
-                 "Property": "plain:threadDetails",
-                 "Value": "script:null"
-                }'
-            ↓FetchThreadDetails [ngx.components.UIDynamicAction-1761584001003]: 
-              beanData: '{"ionBean":"CallSequenceAction","requestable":"plain:ConvertigoMonitor.ThreadDetails"}'
-              ↓threadId [ngx.components.UIControlVariable-1761584001005]: 
+          ↓DetailsButton [ngx.components.UIDynamicElement-1761583600001]: 
+            beanData: '{"ionBean":"Button","Fill":"plain:clear"}'
+            tagName: ion-button
+            ↓Icon [ngx.components.UIDynamicElement-1761583600005]: 
+              beanData: '{"ionBean":"Icon","IconName":"plain:arrow-forward"}'
+              tagName: ion-icon
+            ↓Event [ngx.components.UIControlEvent-1761583600007]: 
+              ↓SetSelectedThread [ngx.components.UIDynamicAction-1761583600009]: 
+                beanData: |
+                  '{
+                   "ionBean": "SetGlobalAction",
+                   "Property": "plain:selectedThread",
+                   "Value": "script:thread ? JSON.parse(JSON.stringify(thread)) : null"
+                  }'
+              ↓ResetThreadDetails [ngx.components.UIDynamicAction-1761584001001]: 
+                beanData: |
+                  '{
+                   "ionBean": "SetGlobalAction",
+                   "Property": "plain:threadDetails",
+                   "Value": "script:null"
+                  }'
+              ↓FetchThreadDetails [ngx.components.UIDynamicAction-1761584001003]: 
+                beanData: '{"ionBean":"CallSequenceAction","requestable":"plain:ConvertigoMonitor.ThreadDetails"}'
+                ↓threadId [ngx.components.UIControlVariable-1761584001005]: 
+                  varValue: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                      - MobileSmartSourceType: 'script:thread && thread.id != null ? thread.id : null'
+                ↓StoreThreadDetails [ngx.components.UICustomAsyncAction-1761584001007]: 
+                  actionValue: 
+                    - xmlizable: 
+                      - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
+                      - com.twinsoft.convertigo.beans.common.FormatedContent: 
+                        →: |
+                          'try {
+                              var detail = props.out && props.out.detail ? props.out.detail : null;
+                              page.global.threadDetails = detail;
+                          } catch (assignErr) {
+                              page.c8o.log.warn(''[MB] StoreThreadDetails error'', assignErr);
+                          } finally {
+                              return;
+                          }'
+              ↓NavigateDetails [ngx.components.UIDynamicAction-1761583600011]: 
+                beanData: '{"ionBean":"PushPageAction","page":"plain:ConvertigoMonitor.Application.NgxApp.ThreadDetails"}'
+          ↓CopyButton [ngx.components.UIDynamicElement-1762012000305]: 
+            beanData: '{"ionBean":"Button","Fill":"plain:clear"}'
+            tagName: ion-button
+            ↓Icon [ngx.components.UIDynamicElement-1762012000307]: 
+              beanData: '{"ionBean":"Icon","IconName":"plain:copy"}'
+              tagName: ion-icon
+            ↓Event [ngx.components.UIControlEvent-1762012000309]: 
+              ↓ThreadVar [ngx.components.UIControlVariable-1762012000347]: 
                 varValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:thread && thread.id != null ? thread.id : null'
-              ↓StoreThreadDetails [ngx.components.UICustomAsyncAction-1761584001007]: 
+                    - MobileSmartSourceType: script:thread
+              ↓CopyAction [ngx.components.UICustomAction-1762012000311]: 
                 actionValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
                     - com.twinsoft.convertigo.beans.common.FormatedContent: 
                       →: |
                         'try {
-                            var detail = props.out && props.out.detail ? props.out.detail : null;
-                            page.global.threadDetails = detail;
-                        } catch (assignErr) {
-                            page.c8o.log.warn(''[MB] StoreThreadDetails error'', assignErr);
+                            this.copyStackPreview(vars.thread);
                         } finally {
-                            return;
+                            resolve();
                         }'
-            ↓NavigateDetails [ngx.components.UIDynamicAction-1761583600011]: 
-              beanData: '{"ionBean":"PushPageAction","page":"plain:ConvertigoMonitor.Application.NgxApp.ThreadDetails"}'
-        ↓Note [ngx.components.UIDynamicElement-1761575995449]: 
-          beanData: '{"ionBean":"Note"}'
-          tagName: ion-note
-          ↓Attr [ngx.components.UIAttribute-1761575995451]: 
-            attrName: slot
-            attrValue: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: plain:end
-          ↓Text [ngx.components.UIText-1761575995453]: 
-            textValue: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: 'script:thread && thread.daemon ? ''Daemon'' : ''User'''
   ↓Directive [ngx.components.UIControlDirective-1761575995455]: 
     directiveName: If
     directiveSource: 
       - xmlizable: 
         - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-        - MobileSmartSourceType: script:!(this.global.threadsSnapshot && this.global.threadsSnapshot.threads && this.global.threadsSnapshot.threads.length)
+        - MobileSmartSourceType: script:!this.sortedThreads().length
     ↓GenericItem [ngx.components.UIDynamicElement-1761575995457]: 
       beanData: '{"ionBean":"GenericItem","Lines":"plain:none"}'
       tagName: ion-item
