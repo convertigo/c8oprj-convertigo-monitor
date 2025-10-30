@@ -1,745 +1,764 @@
+↑isHidden: true
+↑isPublic: false
+authenticatedContextRequired: true
 comment: Returns detailed information about a single JVM thread identified by its id.
-↓Init [steps.SimpleStep-1761584500001]: 
-  expression: |
-    'var ManagementFactory = Packages.java.lang.management.ManagementFactory;
-    var threadMx = ManagementFactory.getThreadMXBean();
-    
-    function isoStringNow() {
-        var date = new Date();
-        if (date.toISOString) {
-            return date.toISOString();
-        }
-        function pad(number) {
-            return number < 10 ? ''0'' + number : '''' + number;
-        }
-        var millis = (''000'' + date.getUTCMilliseconds()).slice(-3);
-        return date.getUTCFullYear() + ''-'' + pad(date.getUTCMonth() + 1) + ''-'' + pad(date.getUTCDate()) +
-            ''T'' + pad(date.getUTCHours()) + '':'' + pad(date.getUTCMinutes()) + '':'' + pad(date.getUTCSeconds()) +
-            ''.'' + millis + ''Z'';
-    }
-    
-    var cpuSupported = threadMx.isThreadCpuTimeSupported();
-    if (cpuSupported && !threadMx.isThreadCpuTimeEnabled()) {
-        threadMx.setThreadCpuTimeEnabled(true);
-    }
-    var cpuTimeEnabled = threadMx.isThreadCpuTimeEnabled();
-    var contentionSupported = threadMx.isThreadContentionMonitoringSupported();
-    if (contentionSupported && !threadMx.isThreadContentionMonitoringEnabled()) {
-        threadMx.setThreadContentionMonitoringEnabled(true);
-    }
-    var contentionEnabled = threadMx.isThreadContentionMonitoringEnabled();
-    var monitorsSupported = threadMx.isObjectMonitorUsageSupported();
-    var synchronizersSupported = threadMx.isSynchronizerUsageSupported();
-    
-    var capturedAt = isoStringNow();
-    var threadInfo = null;
-    var threadIdValue = null;
-    var errorCode = null;
-    var errorMessage = null;
-    
-    try {
-        var input = (typeof threadId !== ''undefined'' && threadId !== null) ? String(threadId).trim() : "";
-        if (input.length === 0) {
-            errorCode = ''missingThreadId'';
-            errorMessage = ''Thread identifier is required.'';
-        } else {
-            threadIdValue = java.lang.Long.valueOf(input);
-            var ids = java.lang.reflect.Array.newInstance(java.lang.Long.TYPE, 1);
-            ids[0] = threadIdValue.longValue();
-            var infos = threadMx.getThreadInfo(ids, monitorsSupported, synchronizersSupported);
-            if (infos != null && infos.length > 0) {
-                threadInfo = infos[0];
+↓AuthGuard [steps.IfThenElseStep-1762019201001]: 
+  comment: Ensure only TEST_PLATFORM_PRIVATE administrators can call this sequence
+  condition: "!com.twinsoft.convertigo.engine.Engine.authenticatedSessionManager.hasRole(context.httpServletRequest != null ? context.httpServletRequest.getSession() : null, com.twinsoft.convertigo.engine.AuthenticatedSessionManager.Role.TEST_PLATFORM_PRIVATE)"
+  ↓Then [steps.ThenStep-1762019201003]: 
+    - ↓SetForbiddenStatus [steps.SimpleStep-1762019201005]: 
+        expression: |
+          if (context.httpServletResponse) {
+           	try {
+           		context.httpServletResponse.setStatus(403);
+           	} catch (statusError) {
+           		/* ignore */
+           	}
+          }
+    - ↓StopSequence [steps.ReturnStep-1762019201007]: 
+        expression: ""
+  ↓Else [steps.ElseStep-1762019201009]: 
+    - ↓Init [steps.SimpleStep-1761584500001]: 
+      expression: |
+        'var ManagementFactory = Packages.java.lang.management.ManagementFactory;
+        var threadMx = ManagementFactory.getThreadMXBean();
+        
+        function isoStringNow() {
+            var date = new Date();
+            if (date.toISOString) {
+                return date.toISOString();
             }
-            if (threadInfo == null) {
-                errorCode = ''threadNotFound'';
-                errorMessage = ''Thread '' + threadIdValue + '' is not active.'';
+            function pad(number) {
+                return number < 10 ? ''0'' + number : '''' + number;
+            }
+            var millis = (''000'' + date.getUTCMilliseconds()).slice(-3);
+            return date.getUTCFullYear() + ''-'' + pad(date.getUTCMonth() + 1) + ''-'' + pad(date.getUTCDate()) +
+                ''T'' + pad(date.getUTCHours()) + '':'' + pad(date.getUTCMinutes()) + '':'' + pad(date.getUTCSeconds()) +
+                ''.'' + millis + ''Z'';
+        }
+        
+        var cpuSupported = threadMx.isThreadCpuTimeSupported();
+        if (cpuSupported && !threadMx.isThreadCpuTimeEnabled()) {
+            threadMx.setThreadCpuTimeEnabled(true);
+        }
+        var cpuTimeEnabled = threadMx.isThreadCpuTimeEnabled();
+        var contentionSupported = threadMx.isThreadContentionMonitoringSupported();
+        if (contentionSupported && !threadMx.isThreadContentionMonitoringEnabled()) {
+            threadMx.setThreadContentionMonitoringEnabled(true);
+        }
+        var contentionEnabled = threadMx.isThreadContentionMonitoringEnabled();
+        var monitorsSupported = threadMx.isObjectMonitorUsageSupported();
+        var synchronizersSupported = threadMx.isSynchronizerUsageSupported();
+        
+        var capturedAt = isoStringNow();
+        var threadInfo = null;
+        var threadIdValue = null;
+        var errorCode = null;
+        var errorMessage = null;
+        
+        try {
+            var input = (typeof threadId !== ''undefined'' && threadId !== null) ? String(threadId).trim() : "";
+            if (input.length === 0) {
+                errorCode = ''missingThreadId'';
+                errorMessage = ''Thread identifier is required.'';
+            } else {
+                threadIdValue = java.lang.Long.valueOf(input);
+                var ids = java.lang.reflect.Array.newInstance(java.lang.Long.TYPE, 1);
+                ids[0] = threadIdValue.longValue();
+                var infos = threadMx.getThreadInfo(ids, monitorsSupported, synchronizersSupported);
+                if (infos != null && infos.length > 0) {
+                    threadInfo = infos[0];
+                }
+                if (threadInfo == null) {
+                    errorCode = ''threadNotFound'';
+                    errorMessage = ''Thread '' + threadIdValue + '' is not active.'';
+                }
+            }
+        } catch (e) {
+            errorCode = ''invalidThreadId'';
+            errorMessage = ''Invalid thread identifier.'';
+        }
+        
+        var threadCpuTimeMillis = null;
+        var threadUserTimeMillis = null;
+        if (threadInfo != null) {
+            var cpuNanos = threadMx.getThreadCpuTime(threadInfo.getThreadId());
+            if (cpuNanos >= 0) {
+                threadCpuTimeMillis = Math.floor(cpuNanos / 1000000);
+            }
+            var userNanos = threadMx.getThreadUserTime(threadInfo.getThreadId());
+            if (userNanos >= 0) {
+                threadUserTimeMillis = Math.floor(userNanos / 1000000);
             }
         }
-    } catch (e) {
-        errorCode = ''invalidThreadId'';
-        errorMessage = ''Invalid thread identifier.'';
-    }
-    
-    var threadCpuTimeMillis = null;
-    var threadUserTimeMillis = null;
-    if (threadInfo != null) {
-        var cpuNanos = threadMx.getThreadCpuTime(threadInfo.getThreadId());
-        if (cpuNanos >= 0) {
-            threadCpuTimeMillis = Math.floor(cpuNanos / 1000000);
-        }
-        var userNanos = threadMx.getThreadUserTime(threadInfo.getThreadId());
-        if (userNanos >= 0) {
-            threadUserTimeMillis = Math.floor(userNanos / 1000000);
-        }
-    }
-    
-    var deadlockedIdsSet = new java.util.HashSet();
-    var deadlockedIds = threadMx.findDeadlockedThreads();
-    if (deadlockedIds != null) {
-        for (var i = 0; i < deadlockedIds.length; i++) {
-            deadlockedIdsSet.add(java.lang.Long.valueOf(deadlockedIds[i]));
-        }
-    }
-    
-    var stackTraceList = new java.util.ArrayList();
-    if (threadInfo != null) {
-        var frames = threadInfo.getStackTrace();
-        for (var idx = 0; idx < frames.length; idx++) {
-            stackTraceList.add(frames[idx]);
-        }
-    }
-    
-    var stackAsText = null;
-    if (stackTraceList.size() > 0) {
-        var stackBuilder = new java.lang.StringBuilder();
-        for (var sIdx = 0; sIdx < stackTraceList.size(); sIdx++) {
-            if (sIdx > 0) {
-                stackBuilder.append("\n");
+        
+        var deadlockedIdsSet = new java.util.HashSet();
+        var deadlockedIds = threadMx.findDeadlockedThreads();
+        if (deadlockedIds != null) {
+            for (var i = 0; i < deadlockedIds.length; i++) {
+                deadlockedIdsSet.add(java.lang.Long.valueOf(deadlockedIds[i]));
             }
-            stackBuilder.append(String(stackTraceList.get(sIdx)));
         }
-        stackAsText = stackBuilder.toString();
-    }
-    
-    var lockedMonitorsCount = 0;
-    var lockedSynchronizersCount = 0;
-    if (threadInfo != null) {
-        var lockedMonitors = threadInfo.getLockedMonitors();
-        if (lockedMonitors != null) {
-            lockedMonitorsCount = lockedMonitors.length;
+        
+        var stackTraceList = new java.util.ArrayList();
+        if (threadInfo != null) {
+            var frames = threadInfo.getStackTrace();
+            for (var idx = 0; idx < frames.length; idx++) {
+                stackTraceList.add(frames[idx]);
+            }
         }
-        var lockedSynchronizers = threadInfo.getLockedSynchronizers();
-        if (lockedSynchronizers != null) {
-            lockedSynchronizersCount = lockedSynchronizers.length;
+        
+        var stackAsText = null;
+        if (stackTraceList.size() > 0) {
+            var stackBuilder = new java.lang.StringBuilder();
+            for (var sIdx = 0; sIdx < stackTraceList.size(); sIdx++) {
+                if (sIdx > 0) {
+                    stackBuilder.append("\n");
+                }
+                stackBuilder.append(String(stackTraceList.get(sIdx)));
+            }
+            stackAsText = stackBuilder.toString();
         }
-    }'
-↓detail [steps.JsonObjectStep-1761584500003]: 
-  key: 
-    - xmlizable: 
-      - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-      - SmartType: 
-        - ↑mode: PLAIN
-        - →→: detail
-  ↓capturedAt [steps.JsonFieldStep-1761584500005]: 
-    key: 
-      - xmlizable: 
-        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-        - SmartType: 
-          - ↑mode: PLAIN
-          - →→: capturedAt
-    value: 
-      - xmlizable: 
-        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-        - SmartType: 
-          - ↑mode: JS
-          - →→: capturedAt
-  ↓threadIdField [steps.JsonFieldStep-1761584500007]: 
-    key: 
-      - xmlizable: 
-        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-        - SmartType: 
-          - ↑mode: PLAIN
-          - →→: threadId
-    type: number
-    value: 
-      - xmlizable: 
-        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-        - SmartType: 
-          - ↑mode: JS
-          - →→: 'threadInfo != null ? threadInfo.getThreadId() : (threadIdValue != null ? threadIdValue.longValue() : null)'
-  ↓foundField [steps.JsonFieldStep-1761584500009]: 
-    key: 
-      - xmlizable: 
-        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-        - SmartType: 
-          - ↑mode: PLAIN
-          - →→: found
-    type: bool
-    value: 
-      - xmlizable: 
-        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-        - SmartType: 
-          - ↑mode: JS
-          - →→: threadInfo != null
-  ↓errorContainer [steps.IfStep-1761584500011]: 
-    condition: errorCode != null
-    ↓errorObject [steps.JsonObjectStep-1761584500013]: 
+        
+        var lockedMonitorsCount = 0;
+        var lockedSynchronizersCount = 0;
+        if (threadInfo != null) {
+            var lockedMonitors = threadInfo.getLockedMonitors();
+            if (lockedMonitors != null) {
+                lockedMonitorsCount = lockedMonitors.length;
+            }
+            var lockedSynchronizers = threadInfo.getLockedSynchronizers();
+            if (lockedSynchronizers != null) {
+                lockedSynchronizersCount = lockedSynchronizers.length;
+            }
+        }'
+    ↓detail [steps.JsonObjectStep-1761584500003]: 
       key: 
         - xmlizable: 
           - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
           - SmartType: 
             - ↑mode: PLAIN
-            - →→: error
-      ↓errorCode [steps.JsonFieldStep-1761584500015]: 
+            - →→: detail
+      ↓capturedAt [steps.JsonFieldStep-1761584500005]: 
         key: 
           - xmlizable: 
             - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
             - SmartType: 
               - ↑mode: PLAIN
-              - →→: code
+              - →→: capturedAt
         value: 
           - xmlizable: 
             - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
             - SmartType: 
               - ↑mode: JS
-              - →→: errorCode
-      ↓errorMessage [steps.JsonFieldStep-1761584500017]: 
+              - →→: capturedAt
+      ↓threadIdField [steps.JsonFieldStep-1761584500007]: 
         key: 
           - xmlizable: 
             - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
             - SmartType: 
               - ↑mode: PLAIN
-              - →→: message
-        value: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: JS
-              - →→: errorMessage
-  ↓threadData [steps.IfStep-1761584500019]: 
-    condition: threadInfo != null
-    ↓nameField [steps.JsonFieldStep-1761584500021]: 
-      key: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: PLAIN
-            - →→: name
-      value: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: JS
-            - →→: threadInfo.getThreadName()
-    ↓stateField [steps.JsonFieldStep-1761584500023]: 
-      key: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: PLAIN
-            - →→: state
-      value: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: JS
-            - →→: String(threadInfo.getThreadState())
-    ↓daemonField [steps.JsonFieldStep-1761584500025]: 
-      key: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: PLAIN
-            - →→: daemon
-      type: bool
-      value: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: JS
-            - →→: threadInfo.isDaemon()
-    ↓inNativeField [steps.JsonFieldStep-1761584500027]: 
-      key: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: PLAIN
-            - →→: inNative
-      type: bool
-      value: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: JS
-            - →→: threadInfo.isInNative()
-    ↓suspendedField [steps.JsonFieldStep-1761584500029]: 
-      key: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: PLAIN
-            - →→: suspended
-      type: bool
-      value: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: JS
-            - →→: threadInfo.isSuspended()
-    ↓deadlockedField [steps.JsonFieldStep-1761584500031]: 
-      key: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: PLAIN
-            - →→: deadlocked
-      type: bool
-      value: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: JS
-            - →→: deadlockedIdsSet.contains(java.lang.Long.valueOf(threadInfo.getThreadId()))
-    ↓cpuEnabledField [steps.JsonFieldStep-1761584500033]: 
-      key: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: PLAIN
-            - →→: cpuTimeEnabled
-      type: bool
-      value: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: JS
-            - →→: cpuTimeEnabled
-    ↓contentionEnabledField [steps.JsonFieldStep-1761584500035]: 
-      key: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: PLAIN
-            - →→: contentionMonitoringEnabled
-      type: bool
-      value: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: JS
-            - →→: contentionEnabled
-    ↓cpuTimeValue [steps.IfStep-1761584500037]: 
-      condition: threadCpuTimeMillis != null
-      ↓cpuTimeField [steps.JsonFieldStep-1761584500039]: 
-        key: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: PLAIN
-              - →→: cpuTimeMillis
+              - →→: threadId
         type: number
         value: 
           - xmlizable: 
             - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
             - SmartType: 
               - ↑mode: JS
-              - →→: threadCpuTimeMillis
-    ↓cpuTimeNull [steps.IfStep-1761584500041]: 
-      condition: threadCpuTimeMillis == null
-      ↓cpuTimeNullField [steps.JsonFieldStep-1761584500043]: 
+              - →→: 'threadInfo != null ? threadInfo.getThreadId() : (threadIdValue != null ? threadIdValue.longValue() : null)'
+      ↓foundField [steps.JsonFieldStep-1761584500009]: 
         key: 
           - xmlizable: 
             - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
             - SmartType: 
               - ↑mode: PLAIN
-              - →→: cpuTimeMillis
-        type: nul
+              - →→: found
+        type: bool
         value: 
           - xmlizable: 
             - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
             - SmartType: 
               - ↑mode: JS
-              - →→: null
-    ↓userTimeValue [steps.IfStep-1761584500045]: 
-      condition: threadUserTimeMillis != null
-      ↓userTimeField [steps.JsonFieldStep-1761584500047]: 
-        key: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: PLAIN
-              - →→: userTimeMillis
-        type: number
-        value: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: JS
-              - →→: threadUserTimeMillis
-    ↓userTimeNull [steps.IfStep-1761584500049]: 
-      condition: threadUserTimeMillis == null
-      ↓userTimeNullField [steps.JsonFieldStep-1761584500051]: 
-        key: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: PLAIN
-              - →→: userTimeMillis
-        type: nul
-        value: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: JS
-              - →→: null
-    ↓blockedCountField [steps.JsonFieldStep-1761584500053]: 
-      key: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: PLAIN
-            - →→: blockedCount
-      type: number
-      value: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: JS
-            - →→: threadInfo.getBlockedCount()
-    ↓blockedTimeValue [steps.IfStep-1761584500055]: 
-      condition: threadInfo.getBlockedTime() >= 0
-      ↓blockedTimeField [steps.JsonFieldStep-1761584500057]: 
-        key: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: PLAIN
-              - →→: blockedTimeMillis
-        type: number
-        value: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: JS
-              - →→: threadInfo.getBlockedTime()
-    ↓blockedTimeNull [steps.IfStep-1761584500059]: 
-      condition: threadInfo.getBlockedTime() < 0
-      ↓blockedTimeNullField [steps.JsonFieldStep-1761584500061]: 
-        key: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: PLAIN
-              - →→: blockedTimeMillis
-        type: nul
-        value: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: JS
-              - →→: null
-    ↓waitedCountField [steps.JsonFieldStep-1761584500063]: 
-      key: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: PLAIN
-            - →→: waitedCount
-      type: number
-      value: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: JS
-            - →→: threadInfo.getWaitedCount()
-    ↓waitedTimeValue [steps.IfStep-1761584500065]: 
-      condition: threadInfo.getWaitedTime() >= 0
-      ↓waitedTimeField [steps.JsonFieldStep-1761584500067]: 
-        key: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: PLAIN
-              - →→: waitedTimeMillis
-        type: number
-        value: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: JS
-              - →→: threadInfo.getWaitedTime()
-    ↓waitedTimeNull [steps.IfStep-1761584500069]: 
-      condition: threadInfo.getWaitedTime() < 0
-      ↓waitedTimeNullField [steps.JsonFieldStep-1761584500071]: 
-        key: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: PLAIN
-              - →→: waitedTimeMillis
-        type: nul
-        value: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: JS
-              - →→: null
-    ↓lockNameValue [steps.IfStep-1761584500073]: 
-      condition: threadInfo.getLockName() != null
-      ↓lockNameField [steps.JsonFieldStep-1761584500075]: 
-        key: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: PLAIN
-              - →→: lockName
-        value: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: JS
-              - →→: threadInfo.getLockName()
-    ↓lockNameNull [steps.IfStep-1761584500077]: 
-      condition: threadInfo.getLockName() == null
-      ↓lockNameNullField [steps.JsonFieldStep-1761584500079]: 
-        key: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: PLAIN
-              - →→: lockName
-        type: nul
-        value: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: JS
-              - →→: null
-    ↓lockOwnerIdValue [steps.IfStep-1761584500081]: 
-      condition: threadInfo.getLockOwnerId() >= 0
-      ↓lockOwnerIdField [steps.JsonFieldStep-1761584500083]: 
-        key: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: PLAIN
-              - →→: lockOwnerId
-        type: number
-        value: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: JS
-              - →→: threadInfo.getLockOwnerId()
-    ↓lockOwnerIdNull [steps.IfStep-1761584500085]: 
-      condition: threadInfo.getLockOwnerId() < 0
-      ↓lockOwnerIdNullField [steps.JsonFieldStep-1761584500087]: 
-        key: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: PLAIN
-              - →→: lockOwnerId
-        type: nul
-        value: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: JS
-              - →→: null
-    ↓lockOwnerNameValue [steps.IfStep-1761584500089]: 
-      condition: threadInfo.getLockOwnerName() != null
-      ↓lockOwnerNameField [steps.JsonFieldStep-1761584500091]: 
-        key: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: PLAIN
-              - →→: lockOwnerName
-        value: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: JS
-              - →→: threadInfo.getLockOwnerName()
-    ↓lockOwnerNameNull [steps.IfStep-1761584500093]: 
-      condition: threadInfo.getLockOwnerName() == null
-      ↓lockOwnerNameNullField [steps.JsonFieldStep-1761584500095]: 
-        key: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: PLAIN
-              - →→: lockOwnerName
-        type: nul
-        value: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: JS
-              - →→: null
-    ↓stackDepthField [steps.JsonFieldStep-1761584500097]: 
-      key: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: PLAIN
-            - →→: stackDepth
-      type: number
-      value: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: JS
-            - →→: threadInfo.getStackTrace().length
-    ↓stackSampleValue [steps.IfStep-1761584500099]: 
-      condition: '(function(){ var stack = threadInfo.getStackTrace(); return stack.length > 0 ? stack[0].toString() : null; })() != null'
-      ↓stackSampleField [steps.JsonFieldStep-1761584500101]: 
-        key: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: PLAIN
-              - →→: stackSample
-        value: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: JS
-              - →→: '(function(){ var stack = threadInfo.getStackTrace(); return stack.length > 0 ? stack[0].toString() : null; })()'
-    ↓stackSampleNull [steps.IfStep-1761584500103]: 
-      condition: '(function(){ var stack = threadInfo.getStackTrace(); return stack.length > 0 ? stack[0].toString() : null; })() == null'
-      ↓stackSampleNullField [steps.JsonFieldStep-1761584500105]: 
-        key: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: PLAIN
-              - →→: stackSample
-        type: nul
-        value: 
-          - xmlizable: 
-            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-            - SmartType: 
-              - ↑mode: JS
-              - →→: null
-    ↓lockedMonitorsField [steps.JsonFieldStep-1761584500107]: 
-      key: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: PLAIN
-            - →→: lockedMonitors
-      type: number
-      value: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: JS
-            - →→: lockedMonitorsCount
-    ↓lockedSynchronizersField [steps.JsonFieldStep-1761584500109]: 
-      key: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: PLAIN
-            - →→: lockedSynchronizers
-      type: number
-      value: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: JS
-            - →→: lockedSynchronizersCount
-    ↓stackTraceArray [steps.JsonArrayStep-1761584500111]: 
-      key: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-          - SmartType: 
-            - ↑mode: PLAIN
-            - →→: stackTrace
-      ↓stackIterator [steps.SimpleIteratorStep-1761584500113]: 
-        expression: stackTraceList
-        ↓frameObject [steps.JsonObjectStep-1761584500115]: 
+              - →→: threadInfo != null
+      ↓errorContainer [steps.IfStep-1761584500011]: 
+        condition: errorCode != null
+        ↓errorObject [steps.JsonObjectStep-1761584500013]: 
           key: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
               - SmartType: 
                 - ↑mode: PLAIN
-                - →→: frame
-          ↓frameText [steps.JsonFieldStep-1761584500117]: 
+                - →→: error
+          ↓errorCode [steps.JsonFieldStep-1761584500015]: 
             key: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
                 - SmartType: 
                   - ↑mode: PLAIN
-                  - →→: text
+                  - →→: code
             value: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
                 - SmartType: 
                   - ↑mode: JS
-                  - →→: item.toString()
-          ↓frameClass [steps.JsonFieldStep-1761584500119]: 
+                  - →→: errorCode
+          ↓errorMessage [steps.JsonFieldStep-1761584500017]: 
             key: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
                 - SmartType: 
                   - ↑mode: PLAIN
-                  - →→: className
+                  - →→: message
             value: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
                 - SmartType: 
                   - ↑mode: JS
-                  - →→: item.getClassName()
-          ↓frameMethod [steps.JsonFieldStep-1761584500121]: 
-            key: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: PLAIN
-                  - →→: methodName
-            value: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: JS
-                  - →→: item.getMethodName()
-          ↓frameFile [steps.JsonFieldStep-1761584500123]: 
-            key: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: PLAIN
-                  - →→: fileName
-            value: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: JS
-                  - →→: 'item.getFileName() != null ? item.getFileName() : null'
-          ↓frameLine [steps.JsonFieldStep-1761584500125]: 
-            key: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: PLAIN
-                  - →→: lineNumber
-            type: number
-            value: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: JS
-                  - →→: item.getLineNumber()
-        ↓frameNative [steps.JsonFieldStep-1761584500127]: 
+                  - →→: errorMessage
+      ↓threadData [steps.IfStep-1761584500019]: 
+        condition: threadInfo != null
+        ↓nameField [steps.JsonFieldStep-1761584500021]: 
           key: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
               - SmartType: 
                 - ↑mode: PLAIN
-                - →→: native
+                - →→: name
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: threadInfo.getThreadName()
+        ↓stateField [steps.JsonFieldStep-1761584500023]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: state
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: String(threadInfo.getThreadState())
+        ↓daemonField [steps.JsonFieldStep-1761584500025]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: daemon
           type: bool
           value: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
               - SmartType: 
                 - ↑mode: JS
-                - →→: item.isNativeMethod()
-  ↓stackAsTextField [steps.JsonFieldStep-1762011000063]: 
-    key: 
-      - xmlizable: 
-        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-        - SmartType: 
-          - ↑mode: PLAIN
-          - →→: stackAsText
-    value: 
-      - xmlizable: 
-        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-        - SmartType: 
-          - ↑mode: JS
-          - →→: stackAsText
-↓threadId [variables.RequestableVariable-1761584500129]: 
-  comment: Target thread identifier
-  description: Numeric identifier of the JVM thread to inspect.
+                - →→: threadInfo.isDaemon()
+        ↓inNativeField [steps.JsonFieldStep-1761584500027]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: inNative
+          type: bool
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: threadInfo.isInNative()
+        ↓suspendedField [steps.JsonFieldStep-1761584500029]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: suspended
+          type: bool
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: threadInfo.isSuspended()
+        ↓deadlockedField [steps.JsonFieldStep-1761584500031]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: deadlocked
+          type: bool
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: deadlockedIdsSet.contains(java.lang.Long.valueOf(threadInfo.getThreadId()))
+        ↓cpuEnabledField [steps.JsonFieldStep-1761584500033]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: cpuTimeEnabled
+          type: bool
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: cpuTimeEnabled
+        ↓contentionEnabledField [steps.JsonFieldStep-1761584500035]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: contentionMonitoringEnabled
+          type: bool
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: contentionEnabled
+        ↓cpuTimeValue [steps.IfStep-1761584500037]: 
+          condition: threadCpuTimeMillis != null
+          ↓cpuTimeField [steps.JsonFieldStep-1761584500039]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: cpuTimeMillis
+            type: number
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: threadCpuTimeMillis
+        ↓cpuTimeNull [steps.IfStep-1761584500041]: 
+          condition: threadCpuTimeMillis == null
+          ↓cpuTimeNullField [steps.JsonFieldStep-1761584500043]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: cpuTimeMillis
+            type: nul
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: null
+        ↓userTimeValue [steps.IfStep-1761584500045]: 
+          condition: threadUserTimeMillis != null
+          ↓userTimeField [steps.JsonFieldStep-1761584500047]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: userTimeMillis
+            type: number
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: threadUserTimeMillis
+        ↓userTimeNull [steps.IfStep-1761584500049]: 
+          condition: threadUserTimeMillis == null
+          ↓userTimeNullField [steps.JsonFieldStep-1761584500051]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: userTimeMillis
+            type: nul
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: null
+        ↓blockedCountField [steps.JsonFieldStep-1761584500053]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: blockedCount
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: threadInfo.getBlockedCount()
+        ↓blockedTimeValue [steps.IfStep-1761584500055]: 
+          condition: threadInfo.getBlockedTime() >= 0
+          ↓blockedTimeField [steps.JsonFieldStep-1761584500057]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: blockedTimeMillis
+            type: number
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: threadInfo.getBlockedTime()
+        ↓blockedTimeNull [steps.IfStep-1761584500059]: 
+          condition: threadInfo.getBlockedTime() < 0
+          ↓blockedTimeNullField [steps.JsonFieldStep-1761584500061]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: blockedTimeMillis
+            type: nul
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: null
+        ↓waitedCountField [steps.JsonFieldStep-1761584500063]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: waitedCount
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: threadInfo.getWaitedCount()
+        ↓waitedTimeValue [steps.IfStep-1761584500065]: 
+          condition: threadInfo.getWaitedTime() >= 0
+          ↓waitedTimeField [steps.JsonFieldStep-1761584500067]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: waitedTimeMillis
+            type: number
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: threadInfo.getWaitedTime()
+        ↓waitedTimeNull [steps.IfStep-1761584500069]: 
+          condition: threadInfo.getWaitedTime() < 0
+          ↓waitedTimeNullField [steps.JsonFieldStep-1761584500071]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: waitedTimeMillis
+            type: nul
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: null
+        ↓lockNameValue [steps.IfStep-1761584500073]: 
+          condition: threadInfo.getLockName() != null
+          ↓lockNameField [steps.JsonFieldStep-1761584500075]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: lockName
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: threadInfo.getLockName()
+        ↓lockNameNull [steps.IfStep-1761584500077]: 
+          condition: threadInfo.getLockName() == null
+          ↓lockNameNullField [steps.JsonFieldStep-1761584500079]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: lockName
+            type: nul
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: null
+        ↓lockOwnerIdValue [steps.IfStep-1761584500081]: 
+          condition: threadInfo.getLockOwnerId() >= 0
+          ↓lockOwnerIdField [steps.JsonFieldStep-1761584500083]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: lockOwnerId
+            type: number
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: threadInfo.getLockOwnerId()
+        ↓lockOwnerIdNull [steps.IfStep-1761584500085]: 
+          condition: threadInfo.getLockOwnerId() < 0
+          ↓lockOwnerIdNullField [steps.JsonFieldStep-1761584500087]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: lockOwnerId
+            type: nul
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: null
+        ↓lockOwnerNameValue [steps.IfStep-1761584500089]: 
+          condition: threadInfo.getLockOwnerName() != null
+          ↓lockOwnerNameField [steps.JsonFieldStep-1761584500091]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: lockOwnerName
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: threadInfo.getLockOwnerName()
+        ↓lockOwnerNameNull [steps.IfStep-1761584500093]: 
+          condition: threadInfo.getLockOwnerName() == null
+          ↓lockOwnerNameNullField [steps.JsonFieldStep-1761584500095]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: lockOwnerName
+            type: nul
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: null
+        ↓stackDepthField [steps.JsonFieldStep-1761584500097]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: stackDepth
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: threadInfo.getStackTrace().length
+        ↓stackSampleValue [steps.IfStep-1761584500099]: 
+          condition: '(function(){ var stack = threadInfo.getStackTrace(); return stack.length > 0 ? stack[0].toString() : null; })() != null'
+          ↓stackSampleField [steps.JsonFieldStep-1761584500101]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: stackSample
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: '(function(){ var stack = threadInfo.getStackTrace(); return stack.length > 0 ? stack[0].toString() : null; })()'
+        ↓stackSampleNull [steps.IfStep-1761584500103]: 
+          condition: '(function(){ var stack = threadInfo.getStackTrace(); return stack.length > 0 ? stack[0].toString() : null; })() == null'
+          ↓stackSampleNullField [steps.JsonFieldStep-1761584500105]: 
+            key: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: PLAIN
+                  - →→: stackSample
+            type: nul
+            value: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                - SmartType: 
+                  - ↑mode: JS
+                  - →→: null
+        ↓lockedMonitorsField [steps.JsonFieldStep-1761584500107]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: lockedMonitors
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: lockedMonitorsCount
+        ↓lockedSynchronizersField [steps.JsonFieldStep-1761584500109]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: lockedSynchronizers
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: lockedSynchronizersCount
+        ↓stackTraceArray [steps.JsonArrayStep-1761584500111]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: stackTrace
+          ↓stackIterator [steps.SimpleIteratorStep-1761584500113]: 
+            expression: stackTraceList
+            ↓frameObject [steps.JsonObjectStep-1761584500115]: 
+              key: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                  - SmartType: 
+                    - ↑mode: PLAIN
+                    - →→: frame
+              ↓frameText [steps.JsonFieldStep-1761584500117]: 
+                key: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                    - SmartType: 
+                      - ↑mode: PLAIN
+                      - →→: text
+                value: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                    - SmartType: 
+                      - ↑mode: JS
+                      - →→: item.toString()
+              ↓frameClass [steps.JsonFieldStep-1761584500119]: 
+                key: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                    - SmartType: 
+                      - ↑mode: PLAIN
+                      - →→: className
+                value: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                    - SmartType: 
+                      - ↑mode: JS
+                      - →→: item.getClassName()
+              ↓frameMethod [steps.JsonFieldStep-1761584500121]: 
+                key: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                    - SmartType: 
+                      - ↑mode: PLAIN
+                      - →→: methodName
+                value: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                    - SmartType: 
+                      - ↑mode: JS
+                      - →→: item.getMethodName()
+              ↓frameFile [steps.JsonFieldStep-1761584500123]: 
+                key: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                    - SmartType: 
+                      - ↑mode: PLAIN
+                      - →→: fileName
+                value: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                    - SmartType: 
+                      - ↑mode: JS
+                      - →→: 'item.getFileName() != null ? item.getFileName() : null'
+              ↓frameLine [steps.JsonFieldStep-1761584500125]: 
+                key: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                    - SmartType: 
+                      - ↑mode: PLAIN
+                      - →→: lineNumber
+                type: number
+                value: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                    - SmartType: 
+                      - ↑mode: JS
+                      - →→: item.getLineNumber()
+            ↓frameNative [steps.JsonFieldStep-1761584500127]: 
+              key: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                  - SmartType: 
+                    - ↑mode: PLAIN
+                    - →→: native
+              type: bool
+              value: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+                  - SmartType: 
+                    - ↑mode: JS
+                    - →→: item.isNativeMethod()
+      ↓stackAsTextField [steps.JsonFieldStep-1762011000063]: 
+        key: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: PLAIN
+              - →→: stackAsText
+        value: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: JS
+              - →→: stackAsText
+    ↓threadId [variables.RequestableVariable-1761584500129]: 
+      comment: Target thread identifier
+      description: Numeric identifier of the JVM thread to inspect.

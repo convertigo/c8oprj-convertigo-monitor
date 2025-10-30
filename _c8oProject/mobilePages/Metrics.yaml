@@ -137,6 +137,37 @@ scriptContent:
         		const delay = Number(this.global.refreshMetrics);
         		return delay > 0 ? ''Auto refresh enabled'' : ''Refresh cadence unavailable'';
         	}
+        	public themePreferenceValue(): string {
+        		return this.global && this.global.themePreference ? this.global.themePreference : ''system'';
+        	}
+        	public themeResolvedValue(): string {
+        		return this.global && this.global.themeResolved ? this.global.themeResolved : ''light'';
+        	}
+        	public themeIcon(): string {
+        		const preference = this.themePreferenceValue();
+        		if (preference === ''light'') {
+        			return ''sunny'';
+        		}
+        		if (preference === ''dark'') {
+        			return ''moon'';
+        		}
+        		return this.themeResolvedValue() === ''dark'' ? ''contrast'' : ''contrast-outline'';
+        	}
+        	public themeTooltip(): string {
+        		const preference = this.themePreferenceValue();
+        		if (preference === ''light'') {
+        			return ''Theme · Light'';
+        		}
+        		if (preference === ''dark'') {
+        			return ''Theme · Dark'';
+        		}
+        		return ''Theme · System ('' + this.themeResolvedValue() + '')'';
+        	}
+        	public cycleThemePreference(): void {
+        		if (typeof window !== ''undefined'' && (window as any).convertigoTheme && typeof (window as any).convertigoTheme.cycle === ''function'') {
+        			(window as any).convertigoTheme.cycle();
+        		}
+        	}
         	public latestCpuProcess(): number | null {
         		const history = Array.isArray(this.global.metricsHistory) ? this.global.metricsHistory : [];
         		if (history.length) {
@@ -271,9 +302,29 @@ title: Metrics dashboard
       ↓Button [ngx.components.UIDynamicElement-1588170817806]: 
         beanData: '{"ionBean":"Button"}'
         tagName: ion-button
+        ↓AttrTitle [ngx.components.UIAttribute-1762017201001]: 
+          attrName: title
+          attrValue: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+              - MobileSmartSourceType: script:this.themeTooltip()
         ↓Icon [ngx.components.UIDynamicElement-1588170831166]: 
-          beanData: '{"ionBean":"Icon","IconName":"plain:ellipsis-vertical"}'
+          beanData: '{"ionBean":"Icon","IconName":"script:this.themeIcon()"}'
           tagName: ion-icon
+        ↓Event [ngx.components.UIControlEvent-1762017201003]: 
+          attrName: (click)
+          eventName: (click)
+          ↓ToggleTheme [ngx.components.UICustomAction-1762017201005]: 
+            actionValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
+                - com.twinsoft.convertigo.beans.common.FormatedContent: 
+                  →: |
+                    'try {
+                        this.cycleThemePreference();
+                    } finally {
+                        resolve();
+                    }'
 ↓Content [ngx.components.UIDynamicElement-1489674805352]: 
   beanData: '{"ionBean":"Content"}'
   comment: Page content

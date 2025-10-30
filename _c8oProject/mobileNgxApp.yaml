@@ -6,11 +6,15 @@ componentScriptContent:
         '/*Begin_c8o_AppImport*/
         /*End_c8o_AppImport*/
         /*Begin_c8o_AppDeclaration*/
-        	/*End_c8o_AppDeclaration*/
+        	public themePreference: string = ''system'';
+        	public themeResolved: string = ''light'';
+        	private themeMediaQuery: any = null;
+        /*End_c8o_AppDeclaration*/
         /*Begin_c8o_AppSettings*/
                 /*End_c8o_AppSettings*/
         /*Begin_c8o_AppConstructor*/
-        		/*End_c8o_AppConstructor*/
+        		this.initThemeController();
+        /*End_c8o_AppConstructor*/
         /*Begin_c8o_AppInitialization*/
                         /* Uncomment the following lines to enable the i18n feature.
                          * You should add a json per language in the assets/i18n folder. */
@@ -60,7 +64,113 @@ componentScriptContent:
         				
         			/*End_c8o_AppInitialization*/
         /*Begin_c8o_AppFunction*/
-        	/*End_c8o_AppFunction*/
+        	public initThemeController(): void {
+        		if (typeof window === ''undefined'' || typeof document === ''undefined'') {
+        			return;
+        		}
+        		var storageKey = ''ConvertigoMonitor.themePreference'';
+        		try {
+        			this.themeMediaQuery = window.matchMedia && window.matchMedia(''(prefers-color-scheme: dark)'');
+        		} catch (e) {
+        			this.themeMediaQuery = null;
+        		}
+        		var stored = null;
+        		try {
+        			stored = window.localStorage ? window.localStorage.getItem(storageKey) : null;
+        		} catch (storageError) {
+        			stored = null;
+        		}
+        		var initial = (stored === ''light'' || stored === ''dark'' || stored === ''system'') ? stored : ''system'';
+        		this.applyThemePreference(initial, false);
+        		if (this.themeMediaQuery) {
+        			var mediaListener = () => {
+        				if (this.themePreference === ''system'') {
+        					this.applyThemePreference(''system'', false);
+        				}
+        			};
+        			try {
+        				if (this.themeMediaQuery.addEventListener) {
+        					this.themeMediaQuery.addEventListener(''change'', mediaListener);
+        				} else if (this.themeMediaQuery.addListener) {
+        					this.themeMediaQuery.addListener(mediaListener);
+        				}
+        			} catch (listenerError) {
+        				/* ignore */
+        			}
+        		}
+        		var controller: any = (window as any).convertigoTheme || {};
+        		controller.set = (mode: string) => { this.setThemePreference(mode); };
+        		controller.get = () => this.themePreference;
+        		controller.cycle = () => { this.cycleThemePreference(); };
+        		controller.icon = () => this.getThemeIcon();
+        		controller.resolved = () => this.themeResolved;
+        		(window as any).convertigoTheme = controller;
+        	}
+        
+        	public applyThemePreference(mode: string, persist: boolean = true): void {
+        		if (typeof document === ''undefined'') {
+        			return;
+        		}
+        		var body = document.body;
+        		body.classList.remove(''theme-light'', ''theme-dark'', ''dark'');
+        		var resolved = mode;
+        		if (mode === ''light'') {
+        			body.classList.add(''theme-light'');
+        			resolved = ''light'';
+        		} else if (mode === ''dark'') {
+        			body.classList.add(''theme-dark'');
+        			resolved = ''dark'';
+        		} else {
+        			var prefersDark = this.themeMediaQuery && this.themeMediaQuery.matches;
+        			resolved = prefersDark ? ''dark'' : ''light'';
+        			body.classList.add(resolved === ''dark'' ? ''theme-dark'' : ''theme-light'');
+        		}
+        		body.classList.toggle(''dark'', resolved === ''dark'');
+        		this.themePreference = mode;
+        		this.themeResolved = resolved;
+        		try {
+        			this.global.themePreference = mode;
+        			this.global.themeResolved = resolved;
+        		} catch (globalError) {
+        			/* ignore */
+        		}
+        		try {
+        			this.ref.detectChanges();
+        		} catch (cdError) {
+        			/* ignore */
+        		}
+        		if (persist && typeof window !== ''undefined'' && window.localStorage) {
+        			try {
+        				window.localStorage.setItem(''ConvertigoMonitor.themePreference'', mode);
+        			} catch (persistError) {
+        				/* ignore */
+        			}
+        		}
+        	}
+        
+        	public setThemePreference(mode: string): void {
+        		var allowed = [''system'', ''light'', ''dark''];
+        		var target = allowed.indexOf(mode) >= 0 ? mode : ''system'';
+        		this.applyThemePreference(target, true);
+        	}
+        
+        	public cycleThemePreference(): void {
+        		var order = [''system'', ''light'', ''dark''];
+        		var currentIndex = order.indexOf(this.themePreference);
+        		var nextIndex = currentIndex >= 0 ? (currentIndex + 1) % order.length : 0;
+        		this.setThemePreference(order[nextIndex]);
+        	}
+        
+        	public getThemeIcon(): string {
+        		if (this.themePreference === ''light'') {
+        			return ''sunny'';
+        		}
+        		if (this.themePreference === ''dark'') {
+        			return ''moon'';
+        		}
+        		return this.themeResolved === ''dark'' ? ''contrast'' : ''contrast-outline'';
+        	}
+        /*End_c8o_AppFunction*/
         '
 tplProjectName: mobilebuilder_tpl_8_3_0_ngx
 ↓Menu [ngx.components.UIDynamicMenu-1500890597895]: 🗏 mobileMenus/Menu.yaml
@@ -280,9 +390,38 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
             --ion-color-light-tint: #f5f6f9;
           }
           '
+↓ManualThemeOverrides [ngx.components.UIStyle-1762017000001]: 
+  comment: Manual overrides for light/dark modes toggled at runtime
+  styleContent: 
+    - xmlizable: 
+      - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
+      - com.twinsoft.convertigo.beans.common.FormatedContent: 
+        →: |
+          'body.theme-light {
+            color-scheme: light;
+            --ion-background-color: #ffffff;
+            --ion-text-color: #1f2023;
+            --ion-toolbar-background: #ffffff;
+            --ion-item-background: #ffffff;
+          }
+          
+          body.theme-dark,
+          body.dark {
+            color-scheme: dark;
+            --ion-background-color: #121212;
+            --ion-text-color: #ffffff;
+            --ion-toolbar-background: #1f1f1f;
+            --ion-item-background: #1e1e1e;
+            --ion-border-color: #2a2a2a;
+          }
+          
+          body.theme-dark ion-card,
+          body.dark ion-card {
+            background: #1f1f1f;
+          }'
 ↓AutoDarkTheme [ngx.components.UIStyle-1662391887098]: 
   comment: This will define the dark theme for the application. This will be selected if the device is in dark mode. You can disable this to disable automatic dark mode switching
-  isEnabled: false
+  isEnabled: true
   styleContent: 
     - xmlizable: 
       - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
@@ -506,6 +645,20 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
        "ionBean": "SetGlobalAction",
        "Property": "plain:metricsSnapshot",
        "Value": "script:{}"
+      }'
+  ↓themePreference [ngx.components.UIDynamicAction-1762017200001]: 
+    beanData: |
+      '{
+       "ionBean": "SetGlobalAction",
+       "Property": "plain:themePreference",
+       "Value": "script:''system''"
+      }'
+  ↓themeResolved [ngx.components.UIDynamicAction-1762017200003]: 
+    beanData: |
+      '{
+       "ionBean": "SetGlobalAction",
+       "Property": "plain:themeResolved",
+       "Value": "script:''light''"
       }'
   ↓threadsSnapshot [ngx.components.UIDynamicAction-1761571739024]: 
     beanData: |

@@ -166,6 +166,37 @@ scriptContent:
         			}
         		}
         	}
+        	public themePreferenceValue(): string {
+        		return this.global && this.global.themePreference ? this.global.themePreference : "system";
+        	}
+        	public themeResolvedValue(): string {
+        		return this.global && this.global.themeResolved ? this.global.themeResolved : "light";
+        	}
+        	public themeIcon(): string {
+        		const preference = this.themePreferenceValue();
+        		if (preference === "light") {
+        			return "sunny";
+        		}
+        		if (preference === "dark") {
+        			return "moon";
+        		}
+        		return this.themeResolvedValue() === "dark" ? "contrast" : "contrast-outline";
+        	}
+        	public themeTooltip(): string {
+        		const preference = this.themePreferenceValue();
+        		if (preference === "light") {
+        			return "Theme · Light";
+        		}
+        		if (preference === "dark") {
+        			return "Theme · Dark";
+        		}
+        		return "Theme · System (" + this.themeResolvedValue() + ")";
+        	}
+        	public cycleThemePreference(): void {
+        		if (typeof window !== "undefined" && (window as any).convertigoTheme && typeof (window as any).convertigoTheme.cycle === "function") {
+        			(window as any).convertigoTheme.cycle();
+        		}
+        	}
         	/*End_c8o_PageFunction*/
         '
 segment: thread-details
@@ -203,6 +234,8 @@ title: Thread Details
           beanData: '{"ionBean":"Icon","IconName":"plain:refresh"}'
           tagName: ion-icon
         ↓Event [ngx.components.UIControlEvent-1761583001021]: 
+          attrName: (click)
+          eventName: (click)
           ↓RefreshDetails [ngx.components.UIDynamicAction-1761584002001]: 
             beanData: '{"ionBean":"CallSequenceAction","requestable":"plain:ConvertigoMonitor.ThreadDetails"}'
             ↓threadId [ngx.components.UIControlVariable-1761584002003]: 
@@ -226,6 +259,32 @@ title: Thread Details
                       }'
           ↓Publish [ngx.components.UIDynamicAction-1761584002007]: 
             beanData: '{"ionBean":"PublishEventAction","topic":"plain:refreshThreads"}'
+      ↓ThemeButton [ngx.components.UIDynamicElement-1762017203001]: 
+        beanData: '{"ionBean":"Button"}'
+        tagName: ion-button
+        ↓AttrTitle [ngx.components.UIAttribute-1762017203003]: 
+          attrName: title
+          attrValue: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+              - MobileSmartSourceType: script:this.themeTooltip()
+        ↓Icon [ngx.components.UIDynamicElement-1762017203005]: 
+          beanData: '{"ionBean":"Icon","IconName":"script:this.themeIcon()"}'
+          tagName: ion-icon
+        ↓Event [ngx.components.UIControlEvent-1762017203007]: 
+          attrName: (click)
+          eventName: (click)
+          ↓ToggleTheme [ngx.components.UICustomAction-1762017203009]: 
+            actionValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
+                - com.twinsoft.convertigo.beans.common.FormatedContent: 
+                  →: |
+                    'try {
+                        this.cycleThemePreference();
+                    } finally {
+                        resolve();
+                    }'
 ↓Content [ngx.components.UIDynamicElement-1761583001025]: 
   beanData: '{"ionBean":"Content"}'
   tagName: ion-content

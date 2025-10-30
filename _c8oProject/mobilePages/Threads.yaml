@@ -188,7 +188,8 @@ scriptContent:
         		}
         		return badges;
         	}
-        	public heatmapMode = "cpu";
+        public heatmapMode = "cpu";
+        public latestHeatmapMax = 0;
         	public heatmapMetrics(): Array<{ key: string; label: string; mode: string; }> {
         		return [
         			{ key: "cpuTimeMillis", label: "CPU time", mode: "cpu" },
@@ -330,32 +331,58 @@ scriptContent:
         		});
         		return results.slice(0, limit);
         	}
-        	public threadHeatmapSeries(): any[] {
+        public threadHeatmapSeries(): any[] {
         		const metrics = this.heatmapMetrics();
         		const threads = this.heatmapThreadCandidates();
         		if (!metrics.length || !threads.length) {
+        			this.latestHeatmapMax = 0;
         			return [];
         		}
         		const selected = metrics.find((metric) => metric.mode === this.heatmapMode) || metrics[0];
+        		let maxValue = 0;
+        		const data = threads.map((entry) => {
+        			const value = entry.values[selected.key];
+        			if (typeof value === "number" && value > maxValue) {
+        				maxValue = value;
+        			}
+        			return { x: entry.label, y: value };
+        		});
+        		this.latestHeatmapMax = maxValue;
         		return [{
          			name: selected.label,
-         			data: threads.map((entry) => ({
-         				x: entry.label,
-         				y: entry.values[selected.key]
-        			}))
+         			data
         		}];
+        	}
+        	public heatmapPlotOptions(): any {
+        		return {
+        			heatmap: {
+        				shadeIntensity: 0.15,
+        				radius: 4,
+        				useFillColorAsStroke: false,
+        				colorScale: {
+        					ranges: this.heatmapColorRanges()
+        				}
+        			}
+        		};
+        	}
+        	public heatmapColorRanges(): any[] {
+        		const max = this.latestHeatmapMax > 0 ? this.latestHeatmapMax : 1;
+        		const step = Math.max(max / 5, 1);
+        		const colors = ["#fff9c4", "#ffe082", "#ffc107", "#ff7043", "#c62828"];
+        		const ranges: any[] = [];
+        		for (let i = 0; i < colors.length; i++) {
+        			const from = i * step;
+        			if (from > max) {
+        				break;
+        			}
+        			const to = i === colors.length - 1 ? max : Math.min(max, (i + 1) * step);
+        			ranges.push({ from, to, color: colors[i] });
+        		}
+        		return ranges;
         	}
         	public hasThreadHeatmap(): boolean {
         		const series = this.threadHeatmapSeries();
-        		for (const entry of series) {
-        			const data = entry && Array.isArray(entry.data) ? entry.data : [];
-        			for (const point of data) {
-        				if (point && typeof point.y === "number" && point.y > 0) {
-        					return true;
-        				}
-        			}
-        		}
-        		return false;
+        		return series.some((entry) => entry && Array.isArray(entry.data) && entry.data.some((point: any) => typeof point?.y === "number" && point.y > 0));
         	}
         	public threadHeatmapSubtitle(): string {
         		const metrics = this.heatmapMetrics();
@@ -393,6 +420,37 @@ scriptContent:
         			}
         		}
         	}
+        	public themePreferenceValue(): string {
+        		return this.global && this.global.themePreference ? this.global.themePreference : "system";
+        	}
+        	public themeResolvedValue(): string {
+        		return this.global && this.global.themeResolved ? this.global.themeResolved : "light";
+        	}
+        	public themeIcon(): string {
+        		const preference = this.themePreferenceValue();
+        		if (preference === "light") {
+        			return "sunny";
+        		}
+        		if (preference === "dark") {
+        			return "moon";
+        		}
+        		return this.themeResolvedValue() === "dark" ? "contrast" : "contrast-outline";
+        	}
+        	public themeTooltip(): string {
+        		const preference = this.themePreferenceValue();
+        		if (preference === "light") {
+        			return "Theme · Light";
+        		}
+        		if (preference === "dark") {
+        			return "Theme · Dark";
+        		}
+        		return "Theme · System (" + this.themeResolvedValue() + ")";
+        	}
+        	public cycleThemePreference(): void {
+        		if (typeof window !== "undefined" && (window as any).convertigoTheme && typeof (window as any).convertigoTheme.cycle === "function") {
+        			(window as any).convertigoTheme.cycle();
+        		}
+        	}
         	/*End_c8o_PageFunction*/
         '
 segment: threads
@@ -427,8 +485,36 @@ title: Threads
           beanData: '{"ionBean":"Icon","IconName":"plain:refresh"}'
           tagName: ion-icon
         ↓Event [ngx.components.UIControlEvent-1761575995371]: 
+          attrName: (click)
+          eventName: (click)
           ↓PublishEvent [ngx.components.UIDynamicAction-1761575995373]: 
             beanData: '{"ionBean":"PublishEventAction","topic":"plain:refreshThreads"}'
+      ↓ThemeButton [ngx.components.UIDynamicElement-1762017202001]: 
+        beanData: '{"ionBean":"Button"}'
+        tagName: ion-button
+        ↓AttrTitle [ngx.components.UIAttribute-1762017202003]: 
+          attrName: title
+          attrValue: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+              - MobileSmartSourceType: script:this.themeTooltip()
+        ↓Icon [ngx.components.UIDynamicElement-1762017202005]: 
+          beanData: '{"ionBean":"Icon","IconName":"script:this.themeIcon()"}'
+          tagName: ion-icon
+        ↓Event [ngx.components.UIControlEvent-1762017202007]: 
+          attrName: (click)
+          eventName: (click)
+          ↓ToggleTheme [ngx.components.UICustomAction-1762017202009]: 
+            actionValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
+                - com.twinsoft.convertigo.beans.common.FormatedContent: 
+                  →: |
+                    'try {
+                        this.cycleThemePreference();
+                    } finally {
+                        resolve();
+                    }'
 ↓Content [ngx.components.UIDynamicElement-1761575995375]: 
   beanData: '{"ionBean":"Content"}'
   tagName: ion-content
@@ -743,7 +829,7 @@ title: Threads
             varValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: 'script:{ type: ''heatmap'', height: 350, toolbar: { show: false } }'
+                - MobileSmartSourceType: 'script:{ type: ''heatmap'', height: 350, toolbar: { show: false }, animations: { enabled: false } }'
           ↓annotations [ngx.components.UIUseVariable-1762012500021]: 
             varValue: 
               - xmlizable: 
@@ -753,7 +839,7 @@ title: Threads
             varValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: script:['#1e88e5']
+                - MobileSmartSourceType: script:null
           ↓dataLabels [ngx.components.UIUseVariable-1762012500025]: 
             varValue: 
               - xmlizable: 
@@ -793,7 +879,7 @@ title: Threads
             varValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: 'script:{ heatmap: { shadeIntensity: 0.6, radius: 4, useFillColorAsStroke: false } }'
+                - MobileSmartSourceType: script:this.heatmapPlotOptions()
           ↓responsive [ngx.components.UIUseVariable-1762012500041]: 
             varValue: 
               - xmlizable: 
