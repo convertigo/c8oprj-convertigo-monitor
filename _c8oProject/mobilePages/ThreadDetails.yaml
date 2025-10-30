@@ -66,6 +66,32 @@ scriptContent:
         		}
         		return fallback;
         	}
+        	public refreshRateValue(): string {
+        		const delay = Number(this.global && this.global.refreshThreads);
+        		if (!delay || delay <= 0) {
+        			return "--";
+        		}
+        		if (delay >= 1000) {
+        			const seconds = delay / 1000;
+        			return seconds % 1 === 0 ? seconds.toFixed(0) + " s" : seconds.toFixed(1) + " s";
+        		}
+        		return delay.toFixed(0) + " ms";
+        	}
+        	public refreshRateLabel(): string {
+        		const delay = Number(this.global && this.global.refreshThreads);
+        		return delay > 0 ? "Auto refresh enabled" : "Refresh cadence unavailable";
+        	}
+        	public formatLastUpdateLabel(): string {
+        		const captured = this.detailField("capturedAt", this.global && this.global.threadsSnapshot ? this.global.threadsSnapshot.capturedAt : null);
+        		if (!captured) {
+        			return "Last update · awaiting data";
+        		}
+        		const formatted = this.formatTimestamp(captured);
+        		if (!formatted || formatted === "n/a") {
+        			return "Last update · awaiting data";
+        		}
+        		return "Last update · " + formatted;
+        	}
         	public stackFrames(): any[] {
         		const detail = this.detail();
         		return detail && Array.isArray(detail.stackTrace) ? detail.stackTrace : [];
@@ -486,3 +512,38 @@ title: Thread Details
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
               - MobileSmartSourceType: plain:Select a thread from the list to inspect its details.
+↓Footer [ngx.components.UIDynamicElement-1762016000101]: 
+  beanData: '{"ionBean":"Footer"}'
+  comment: Page footer
+  tagName: ion-footer
+  ↓ToolBar [ngx.components.UIDynamicElement-1762016000103]: 
+    beanData: '{"ionBean":"ToolBar"}'
+    tagName: ion-toolbar
+    ↓NoteRefresh [ngx.components.UIDynamicElement-1762016000105]: 
+      beanData: '{"ionBean":"Note"}'
+      tagName: ion-note
+      ↓AttrSlot [ngx.components.UIAttribute-1762016000107]: 
+        attrName: slot
+        attrValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: plain:start
+      ↓Text [ngx.components.UIText-1762016000109]: 
+        textValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: script:this.refreshRateLabel()
+    ↓NoteUpdated [ngx.components.UIDynamicElement-1762016000111]: 
+      beanData: '{"ionBean":"Note"}'
+      tagName: ion-note
+      ↓AttrSlot [ngx.components.UIAttribute-1762016000113]: 
+        attrName: slot
+        attrValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: plain:end
+      ↓Text [ngx.components.UIText-1762016000115]: 
+        textValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: script:this.formatLastUpdateLabel()

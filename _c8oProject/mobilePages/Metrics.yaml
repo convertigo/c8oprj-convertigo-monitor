@@ -875,7 +875,7 @@ title: Metrics dashboard
             varValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: 'script:[''#fa5252'', ''#1e88e5'', ''#20c997'']'
+                - MobileSmartSourceType: script:['#fa5252', '#1e88e5', '#20c997']
           ↓dataLabels [ngx.components.UIUseVariable-1762015000225]: 
             varValue: 
               - xmlizable: 

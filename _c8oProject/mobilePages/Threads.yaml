@@ -188,44 +188,147 @@ scriptContent:
         		}
         		return badges;
         	}
-        	public heatmapMetrics(): Array<{ key: string; label: string; }> {
+        	public heatmapMode = "cpu";
+        	public heatmapMetrics(): Array<{ key: string; label: string; mode: string; }> {
         		return [
-        			{ key: "cpuTimeMillis", label: "CPU time" },
-        			{ key: "waitedTimeMillis", label: "Wait time" },
-        			{ key: "blockedTimeMillis", label: "Blocked time" }
+        			{ key: "cpuTimeMillis", label: "CPU time", mode: "cpu" },
+        			{ key: "waitedTimeMillis", label: "Wait time", mode: "wait" },
+        			{ key: "blockedTimeMillis", label: "Blocked time", mode: "blocked" }
         		];
         	}
+        	public heatmapOptions(): Array<{ value: string; label: string; description: string; }> {
+        		return [
+        			{ value: "cpu", label: "Top CPU", description: "Threads using the most CPU time" },
+        			{ value: "wait", label: "Top waits", description: "Threads spending the longest time waiting" },
+        			{ value: "blocked", label: "Top blocked", description: "Threads blocked for the longest time" }
+        		];
+        	}
+        	public setHeatmapMode(mode: string): void {
+        		if (!mode || mode === this.heatmapMode) {
+        			return;
+        		}
+        		this.heatmapMode = mode;
+        		this._heatmapDescription = null;
+        	}
+        	private _heatmapDescription: string | null = null;
+        	private _heatmapDescriptionMode: string | null = null;
+        	public heatmapDescription(): string {
+        		if (this._heatmapDescription && this._heatmapDescriptionMode === this.heatmapMode) {
+        			return this._heatmapDescription;
+        		}
+        		const option = this.heatmapOptions().find((entry) => entry.value === this.heatmapMode);
+        		this._heatmapDescriptionMode = this.heatmapMode;
+        		this._heatmapDescription = option ? option.description : "CPU usage";
+        		return this._heatmapDescription;
+        	}
+        	public refreshRateValue(): string {
+        		const delay = Number(this.global && this.global.refreshThreads);
+        		if (!delay || delay <= 0) {
+        			return "--";
+        		}
+        		if (delay >= 1000) {
+        			const seconds = delay / 1000;
+        			return seconds % 1 === 0 ? seconds.toFixed(0) + " s" : seconds.toFixed(1) + " s";
+        		}
+        		return delay.toFixed(0) + " ms";
+        	}
+        	public refreshRateLabel(): string {
+        		const delay = Number(this.global && this.global.refreshThreads);
+        		return delay > 0 ? "Auto refresh enabled" : "Refresh cadence unavailable";
+        	}
+        	public formatLastUpdateLabel(): string {
+        		const snapshot = this.snapshot();
+        		const captured = snapshot && snapshot.capturedAt;
+        		if (!captured) {
+        			return "Last update · awaiting data";
+        		}
+        		const formatted = this.formatTimestamp(captured);
+        		if (!formatted || formatted === "n/a") {
+        			return "Last update · awaiting data";
+        		}
+        		return "Last update · " + formatted;
+        	}
         	public heatmapThreadCandidates(limit: number = 8): Array<{ thread: any; label: string; values: Record<string, number>; score: number; }> {
-        		const threads = this.threadCollection();
-        		if (!threads.length) {
+        		const metrics = this.heatmapMetrics();
+        		if (!metrics.length) {
         			return [];
         		}
-        		const metrics = this.heatmapMetrics();
-        		const enriched = threads.map((thread: any) => {
+        		const selected = metrics.find((metric) => metric.mode === this.heatmapMode) || metrics[0];
+        		const byId = new Map<number, any>();
+        		const allThreads = this.threadCollection();
+        		for (const thread of allThreads) {
+        			if (thread && thread.id != null) {
+        				byId.set(Number(thread.id), thread);
+        			}
+        		}
+        		const seen = new Set<string>();
+        		const results: Array<{ thread: any; label: string; values: Record<string, number>; score: number; }> = [];
+        		const register = (source: any) => {
+        			if (!source) {
+        				return;
+        			}
+        			const candidate = source && source.id != null ? byId.get(Number(source.id)) || source : source;
+        			const key = candidate && candidate.id != null ? "id:" + candidate.id : (candidate && candidate.name ? "name:" + candidate.name : null);
+        			if (key && seen.has(key)) {
+        				return;
+        			}
         			const values: Record<string, number> = {};
         			let score = 0;
         			for (const metric of metrics) {
-        				const raw = Number(thread && typeof thread[metric.key] !== "undefined" && thread[metric.key] !== null ? thread[metric.key] : 0);
+        				const raw = Number(candidate && typeof candidate[metric.key] !== "undefined" && candidate[metric.key] !== null ? candidate[metric.key] : 0);
         				const value = Number.isFinite(raw) && raw > 0 ? raw : 0;
         				values[metric.key] = value;
         				if (value > score) {
         					score = value;
         				}
         			}
-        			return {
-        				thread,
-        				label: this.threadTitle(thread),
+        			if (score <= 0) {
+        				return;
+        			}
+        			if (key) {
+        				seen.add(key);
+        			}
+        			results.push({
+        				thread: candidate,
+        				label: this.threadTitle(candidate),
         				values,
         				score
-        			};
-        		}).filter((entry) => entry.score > 0);
-        		enriched.sort((a, b) => {
+        			});
+        		};
+        		const topCpu = this.topCpuThreads();
+        		const topWait = this.topWaitThreads();
+        		const topBlocked = this.topBlockedThreads();
+        		const seedLists: Array<any[]> = [];
+        		if (selected.mode === "cpu") {
+        			if (topCpu.length) { seedLists.push(topCpu); }
+        		} else if (selected.mode === "wait") {
+        			if (topWait.length) { seedLists.push(topWait); }
+        		} else if (selected.mode === "blocked") {
+        			if (topBlocked.length) { seedLists.push(topBlocked); }
+        		}
+        		if (selected.mode !== "cpu" && topCpu.length) { seedLists.push(topCpu); }
+        		if (selected.mode !== "wait" && topWait.length) { seedLists.push(topWait); }
+        		if (selected.mode !== "blocked" && topBlocked.length) { seedLists.push(topBlocked); }
+        		for (const seed of seedLists) {
+        			for (const thread of seed) {
+        				register(thread);
+        			}
+        		}
+        		if (results.length < limit) {
+        			for (const thread of allThreads) {
+        				register(thread);
+        				if (results.length >= limit) {
+        					break;
+        				}
+        			}
+        		}
+        		results.sort((a, b) => {
         			if (b.score === a.score) {
         				return a.label.localeCompare(b.label);
         			}
         			return b.score - a.score;
         		});
-        		return enriched.slice(0, limit);
+        		return results.slice(0, limit);
         	}
         	public threadHeatmapSeries(): any[] {
         		const metrics = this.heatmapMetrics();
@@ -233,13 +336,14 @@ scriptContent:
         		if (!metrics.length || !threads.length) {
         			return [];
         		}
-        		return metrics.map((metric) => ({
-        			name: metric.label,
-        			data: threads.map((entry) => ({
-        				x: entry.label,
-        				y: entry.values[metric.key]
+        		const selected = metrics.find((metric) => metric.mode === this.heatmapMode) || metrics[0];
+        		return [{
+         			name: selected.label,
+         			data: threads.map((entry) => ({
+         				x: entry.label,
+         				y: entry.values[selected.key]
         			}))
-        		}));
+        		}];
         	}
         	public hasThreadHeatmap(): boolean {
         		const series = this.threadHeatmapSeries();
@@ -254,8 +358,10 @@ scriptContent:
         		return false;
         	}
         	public threadHeatmapSubtitle(): string {
+        		const metrics = this.heatmapMetrics();
+        		const selected = metrics.find((metric) => metric.mode === this.heatmapMode) || metrics[0];
         		const threads = this.heatmapThreadCandidates();
-        		return threads.length ? threads.length + " threads · Durations in ms" : "Waiting for timing metrics";
+        		return threads.length ? threads.length + " threads · " + selected.label : "Waiting for " + selected.label.toLowerCase();
         	}
         	public formatHeatmapTooltip = (value: number): string => {
         		return this.formatMillis(value);
@@ -554,6 +660,76 @@ title: Threads
     ↓CardContent [ngx.components.UIDynamicElement-1762012500013]: 
       beanData: '{"ionBean":"CardContent"}'
       tagName: ion-card-content
+      ↓ModeItem [ngx.components.UIDynamicElement-1762012600001]: 
+        beanData: '{"ionBean":"GenericItem","Lines":"plain:none"}'
+        tagName: ion-item
+        ↓Label [ngx.components.UIDynamicElement-1762012600003]: 
+          beanData: '{"ionBean":"Label"}'
+          tagName: ion-label
+          ↓Title [ngx.components.UIElement-1762012600005]: 
+            tagName: h3
+            ↓Text [ngx.components.UIText-1762012600007]: 
+              textValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:Metric focus
+          ↓Description [ngx.components.UIElement-1762012600009]: 
+            tagName: p
+            ↓Text [ngx.components.UIText-1762012600011]: 
+              textValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: script:"Highlight threads by " + this.heatmapDescription()
+        ↓Segment [ngx.components.UIDynamicElement-1762012600013]: 
+          beanData: '{"ionBean":"Segment"}'
+          tagName: ion-segment
+          ↓AttrScrollable [ngx.components.UIAttribute-1762012600015]: 
+            attrName: scrollable
+            attrValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: plain:false
+          ↓AttrValue [ngx.components.UIAttribute-1762012600017]: 
+            attrName: value
+            attrValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:this.heatmapMode
+          ↓Event [ngx.components.UIControlEvent-1762012600019]: 
+            attrName: (ionChange)
+            eventName: ionChange
+            ↓SetHeatmap [ngx.components.UICustomAction-1762012600021]: 
+              actionValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.common.FormatedContent
+                  - com.twinsoft.convertigo.beans.common.FormatedContent: 
+                    →: |
+                      'try {
+                          var mode = event && event.detail ? event.detail.value : null;
+                          if (mode) {
+                              this.setHeatmapMode(mode);
+                          }
+                      } finally {
+                          resolve();
+                      }'
+          ↓OptionsDirective [ngx.components.UIControlDirective-1762012600023]: 
+            directiveExpression: let option of this.heatmapOptions()
+            directiveIndexName: heatIdx
+            directiveItemName: option
+            ↓Button [ngx.components.UIDynamicElement-1762012600025]: 
+              beanData: '{"ionBean":"SegmentButton"}'
+              tagName: ion-segment-button
+              ↓AttrValue [ngx.components.UIAttribute-1762012600027]: 
+                attrName: value
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: script:option.value
+              ↓Text [ngx.components.UIText-1762012600029]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: script:option.label
       ↓DirectiveHeatmap [ngx.components.UIControlDirective-1762012500015]: 
         directiveName: If
         directiveSource: 
@@ -577,7 +753,7 @@ title: Threads
             varValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: 'script:[''#1e88e5'']'
+                - MobileSmartSourceType: script:['#1e88e5']
           ↓dataLabels [ngx.components.UIUseVariable-1762012500025]: 
             varValue: 
               - xmlizable: 
@@ -1183,3 +1359,38 @@ title: Threads
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
               - MobileSmartSourceType: plain:No threads captured yet.
+↓Footer [ngx.components.UIDynamicElement-1762016000001]: 
+  beanData: '{"ionBean":"Footer"}'
+  comment: Page footer
+  tagName: ion-footer
+  ↓ToolBar [ngx.components.UIDynamicElement-1762016000003]: 
+    beanData: '{"ionBean":"ToolBar"}'
+    tagName: ion-toolbar
+    ↓NoteRefresh [ngx.components.UIDynamicElement-1762016000005]: 
+      beanData: '{"ionBean":"Note"}'
+      tagName: ion-note
+      ↓AttrSlot [ngx.components.UIAttribute-1762016000007]: 
+        attrName: slot
+        attrValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: plain:start
+      ↓Text [ngx.components.UIText-1762016000009]: 
+        textValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: script:this.refreshRateLabel()
+    ↓NoteUpdated [ngx.components.UIDynamicElement-1762016000011]: 
+      beanData: '{"ionBean":"Note"}'
+      tagName: ion-note
+      ↓AttrSlot [ngx.components.UIAttribute-1762016000013]: 
+        attrName: slot
+        attrValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: plain:end
+      ↓Text [ngx.components.UIText-1762016000015]: 
+        textValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: script:this.formatLastUpdateLabel()

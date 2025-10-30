@@ -38,7 +38,7 @@ comment: Returns a real-time snapshot of JVM threads and memory metrics.
         var Paths = Packages.java.nio.file.Paths;
         var Files = Packages.java.nio.file.Files;
         var StandardCharsets = Packages.java.nio.charset.StandardCharsets;
-        if (typeof __metricsContainerCpu === 'undefined') {
+        if (typeof __metricsContainerCpu === ''undefined'') {
             __metricsContainerCpu = new java.util.concurrent.ConcurrentHashMap();
         }
         var trackerKey = ''default'';

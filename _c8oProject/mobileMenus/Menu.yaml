@@ -1,4 +1,4 @@
-beanData: '{"ionBean":"Menu"}'
+beanData: '{"ionBean":"Menu","Disabled":"plain:false"}'
 comment: A menu with all pages added automatically
 tagName: ion-menu
 ↓Header [ngx.components.UIDynamicElement-1500890727582]: 
@@ -14,15 +14,80 @@ tagName: ion-menu
         textValue: 
           - xmlizable: 
             - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-            - MobileSmartSourceType: plain:My Menu
+            - MobileSmartSourceType: plain:Convertigo Monitor
 ↓Content [ngx.components.UIDynamicElement-1500890742326]: 
   beanData: '{"ionBean":"Content"}'
   tagName: ion-content
   ↓List [ngx.components.UIDynamicElement-1501343197007]: 
     beanData: '{"ionBean":"List","Inset":"plain:inset"}'
     tagName: ion-list
-    ↓MenuAutoItems [ngx.components.UIDynamicMenuItems-1500890605250]: 
-      beanData: '{"ionBean":"MenuAutoItems"}'
-      i18n: true
-      itemtitle: 
-      tagName: button
+    ↓MenuItemMetrics [ngx.components.UIDynamicElement-1762016500001]: 
+      beanData: '{"ionBean":"GenericItem","Lines":"plain:none"}'
+      tagName: ion-item
+      ↓AttrRouterLink [ngx.components.UIAttribute-1762016500003]: 
+        attrName: routerLink
+        attrValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: plain:/metrics
+      ↓AttrRouterDirection [ngx.components.UIAttribute-1762016500005]: 
+        attrName: routerDirection
+        attrValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: plain:root
+      ↓AttrDetail [ngx.components.UIAttribute-1762016500007]: 
+        attrName: detail
+        attrValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: plain:false
+      ↓AttrMenuClose [ngx.components.UIAttribute-1762016500009]: 
+        attrName: menuClose
+        attrValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: plain:Menu
+      ↓Label [ngx.components.UIDynamicElement-1762016500011]: 
+        beanData: '{"ionBean":"Label"}'
+        tagName: ion-label
+        ↓Text [ngx.components.UIText-1762016500013]: 
+          textValue: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+              - MobileSmartSourceType: plain:Metrics dashboard
+    ↓MenuItemThreads [ngx.components.UIDynamicElement-1762016500015]: 
+      beanData: '{"ionBean":"GenericItem","Lines":"plain:none"}'
+      tagName: ion-item
+      ↓AttrRouterLink [ngx.components.UIAttribute-1762016500017]: 
+        attrName: routerLink
+        attrValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: plain:/threads
+      ↓AttrRouterDirection [ngx.components.UIAttribute-1762016500019]: 
+        attrName: routerDirection
+        attrValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: plain:root
+      ↓AttrDetail [ngx.components.UIAttribute-1762016500021]: 
+        attrName: detail
+        attrValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: plain:false
+      ↓AttrMenuClose [ngx.components.UIAttribute-1762016500023]: 
+        attrName: menuClose
+        attrValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: plain:Menu
+      ↓Label [ngx.components.UIDynamicElement-1762016500025]: 
+        beanData: '{"ionBean":"Label"}'
+        tagName: ion-label
+        ↓Text [ngx.components.UIText-1762016500027]: 
+          textValue: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+              - MobileSmartSourceType: plain:Threads overview
