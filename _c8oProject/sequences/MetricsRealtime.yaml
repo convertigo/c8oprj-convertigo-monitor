@@ -1,622 +1,603 @@
-↑isHidden: true
-↑isPublic: false
-authenticatedContextRequired: true
 comment: Returns a real-time snapshot of JVM threads and memory metrics.
-↓AuthGuard [steps.IfThenElseStep-1762019200001]: 
-  comment: Ensure only TEST_PLATFORM_PRIVATE administrators can call this sequence
-  condition: "!com.twinsoft.convertigo.engine.Engine.authenticatedSessionManager.hasRole(context.httpServletRequest != null ? context.httpServletRequest.getSession() : null, com.twinsoft.convertigo.engine.AuthenticatedSessionManager.Role.TEST_PLATFORM_PRIVATE)"
-  ↓Then [steps.ThenStep-1762019200003]: 
-    - ↓SetForbiddenStatus [steps.SimpleStep-1762019200005]: 
-        expression: |
-          if (context.httpServletResponse) {
-           	try {
-           		context.httpServletResponse.setStatus(403);
-           	} catch (statusError) {
-           		/* ignore */
-           	}
-          }
-    - ↓StopSequence [steps.ReturnStep-1762019200007]: 
-        expression: ""
-  ↓Else [steps.ElseStep-1762019200009]: 
-    - ↓Init [steps.SimpleStep-1761312851919]: 
-      comment: Prepares JVM MXBeans and helpers shared by JSON steps.
-      expression: |
-        'var ManagementFactory = Packages.java.lang.management.ManagementFactory;
-        var runtimeMx = ManagementFactory.getRuntimeMXBean();
-        var threadMx = ManagementFactory.getThreadMXBean();
-        var memoryMx = ManagementFactory.getMemoryMXBean();
-        var osMx = ManagementFactory.getOperatingSystemMXBean();
-        var comSunOsMx = osMx instanceof Packages.com.sun.management.OperatingSystemMXBean ? osMx : null;
-        var runtime = Packages.java.lang.Runtime.getRuntime();
-        
-        function isoStringNow() {
-            var date = new Date();
-            if (date.toISOString) {
-                return date.toISOString();
-            }
-            function pad(number) {
-                return number < 10 ? ''0'' + number : '''' + number;
-            }
-            var millis = (''000'' + date.getUTCMilliseconds()).slice(-3);
-            return date.getUTCFullYear() + ''-'' + pad(date.getUTCMonth() + 1) + ''-'' + pad(date.getUTCDate()) +
-                ''T'' + pad(date.getUTCHours()) + '':'' + pad(date.getUTCMinutes()) + '':'' + pad(date.getUTCSeconds()) +
-                ''.'' + millis + ''Z'';
+↓Init [steps.SimpleStep-1761312851919]: 
+  comment: Prepares JVM MXBeans and helpers shared by JSON steps.
+  expression: |
+    'var ManagementFactory = Packages.java.lang.management.ManagementFactory;
+    var runtimeMx = ManagementFactory.getRuntimeMXBean();
+    var threadMx = ManagementFactory.getThreadMXBean();
+    var memoryMx = ManagementFactory.getMemoryMXBean();
+    var osMx = ManagementFactory.getOperatingSystemMXBean();
+    var comSunOsMx = osMx instanceof Packages.com.sun.management.OperatingSystemMXBean ? osMx : null;
+    var runtime = Packages.java.lang.Runtime.getRuntime();
+    
+    function isoStringNow() {
+        var date = new Date();
+        if (date.toISOString) {
+            return date.toISOString();
         }
-        
-        var heapUsage = memoryMx.getHeapMemoryUsage();
-        var nonHeapUsage = memoryMx.getNonHeapMemoryUsage();
-        var deadlockedIdsArray = threadMx.findDeadlockedThreads();
-        var deadlockedIds = [];
-        if (deadlockedIdsArray != null) {
-            for (var i = 0; i < deadlockedIdsArray.length; i++) {
-                deadlockedIds.push(deadlockedIdsArray[i]);
-            }
+        function pad(number) {
+            return number < 10 ? ''0'' + number : '''' + number;
         }
-        var containerCpuLoad = null;
-        try {
-            var Paths = Packages.java.nio.file.Paths;
-            var Files = Packages.java.nio.file.Files;
-            var StandardCharsets = Packages.java.nio.charset.StandardCharsets;
-            if (typeof __metricsContainerCpu === ''undefined'') {
-                __metricsContainerCpu = new java.util.concurrent.ConcurrentHashMap();
-            }
-            var trackerKey = ''default'';
-            var nowMillis = Packages.java.lang.System.currentTimeMillis();
-            var usageNanos = null;
-            var cpuLimitCount = null;
-            var cgroupV2Stat = Paths.get(''/sys/fs/cgroup/cpu.stat'');
-            if (Files.exists(cgroupV2Stat)) {
-                var statLines = Files.readAllLines(cgroupV2Stat, StandardCharsets.UTF_8);
-                for (var iStat = 0; iStat < statLines.size(); iStat++) {
-                    var statLine = String(statLines.get(iStat)).trim();
-                    if (statLine.length() === 0) {
-                        continue;
-                    }
-                    var statParts = statLine.split(/\\s+/);
-                    if (statParts.length >= 2 && statParts[0] === ''usage_usec'') {
-                        usageNanos = java.lang.Long.parseLong(statParts[1]) * 1000;
-                    }
+        var millis = (''000'' + date.getUTCMilliseconds()).slice(-3);
+        return date.getUTCFullYear() + ''-'' + pad(date.getUTCMonth() + 1) + ''-'' + pad(date.getUTCDate()) +
+            ''T'' + pad(date.getUTCHours()) + '':'' + pad(date.getUTCMinutes()) + '':'' + pad(date.getUTCSeconds()) +
+            ''.'' + millis + ''Z'';
+    }
+    
+    var heapUsage = memoryMx.getHeapMemoryUsage();
+    var nonHeapUsage = memoryMx.getNonHeapMemoryUsage();
+    var deadlockedIdsArray = threadMx.findDeadlockedThreads();
+    var deadlockedIds = [];
+    if (deadlockedIdsArray != null) {
+        for (var i = 0; i < deadlockedIdsArray.length; i++) {
+            deadlockedIds.push(deadlockedIdsArray[i]);
+        }
+    }
+    var containerCpuLoad = null;
+    try {
+        var Paths = Packages.java.nio.file.Paths;
+        var Files = Packages.java.nio.file.Files;
+        var StandardCharsets = Packages.java.nio.charset.StandardCharsets;
+        if (typeof __metricsContainerCpu === ''undefined'') {
+            __metricsContainerCpu = new java.util.concurrent.ConcurrentHashMap();
+        }
+        var trackerKey = ''default'';
+        var nowMillis = Packages.java.lang.System.currentTimeMillis();
+        var usageNanos = null;
+        var cpuLimitCount = null;
+        var cgroupV2Stat = Paths.get(''/sys/fs/cgroup/cpu.stat'');
+        if (Files.exists(cgroupV2Stat)) {
+            var statLines = Files.readAllLines(cgroupV2Stat, StandardCharsets.UTF_8);
+            for (var iStat = 0; iStat < statLines.size(); iStat++) {
+                var statLine = String(statLines.get(iStat)).trim();
+                if (statLine.length() === 0) {
+                    continue;
                 }
-                var cpuMaxPath = Paths.get(''/sys/fs/cgroup/cpu.max'');
-                if (Files.exists(cpuMaxPath)) {
-                    var cpuMaxContent = new java.lang.String(Files.readAllBytes(cpuMaxPath), StandardCharsets.UTF_8).trim();
-                    if (cpuMaxContent.length() > 0) {
-                        var maxParts = cpuMaxContent.split(/\\s+/);
-                        if (maxParts.length >= 2 && !maxParts[0].equals(''max'')) {
-                            var quotaValue = java.lang.Long.parseLong(maxParts[0]);
-                            var periodValue = java.lang.Long.parseLong(maxParts[1]);
-                            if (quotaValue > 0 && periodValue > 0) {
-                                cpuLimitCount = quotaValue / periodValue;
-                            }
+                var statParts = statLine.split(/\\s+/);
+                if (statParts.length >= 2 && statParts[0] === ''usage_usec'') {
+                    usageNanos = java.lang.Long.parseLong(statParts[1]) * 1000;
+                }
+            }
+            var cpuMaxPath = Paths.get(''/sys/fs/cgroup/cpu.max'');
+            if (Files.exists(cpuMaxPath)) {
+                var cpuMaxContent = new java.lang.String(Files.readAllBytes(cpuMaxPath), StandardCharsets.UTF_8).trim();
+                if (cpuMaxContent.length() > 0) {
+                    var maxParts = cpuMaxContent.split(/\\s+/);
+                    if (maxParts.length >= 2 && !maxParts[0].equals(''max'')) {
+                        var quotaValue = java.lang.Long.parseLong(maxParts[0]);
+                        var periodValue = java.lang.Long.parseLong(maxParts[1]);
+                        if (quotaValue > 0 && periodValue > 0) {
+                            cpuLimitCount = quotaValue / periodValue;
                         }
                     }
                 }
-            } else {
-                var usagePaths = [
-                    ''/sys/fs/cgroup/cpuacct/cpuacct.usage'',
-                    ''/sys/fs/cgroup/cpu/cpuacct.usage'',
-                    ''/sys/fs/cgroup/cpuacct.usage''
-                ];
-                for (var idxPath = 0; idxPath < usagePaths.length; idxPath++) {
-                    var usagePath = Paths.get(usagePaths[idxPath]);
-                    if (Files.exists(usagePath)) {
-                        var usageContent = new java.lang.String(Files.readAllBytes(usagePath), StandardCharsets.UTF_8).trim();
-                        if (usageContent.length() > 0) {
-                            usageNanos = java.lang.Long.parseLong(usageContent);
+            }
+        } else {
+            var usagePaths = [
+                ''/sys/fs/cgroup/cpuacct/cpuacct.usage'',
+                ''/sys/fs/cgroup/cpu/cpuacct.usage'',
+                ''/sys/fs/cgroup/cpuacct.usage''
+            ];
+            for (var idxPath = 0; idxPath < usagePaths.length; idxPath++) {
+                var usagePath = Paths.get(usagePaths[idxPath]);
+                if (Files.exists(usagePath)) {
+                    var usageContent = new java.lang.String(Files.readAllBytes(usagePath), StandardCharsets.UTF_8).trim();
+                    if (usageContent.length() > 0) {
+                        usageNanos = java.lang.Long.parseLong(usageContent);
+                        break;
+                    }
+                }
+            }
+            var quotaPairs = [
+                [''/sys/fs/cgroup/cpu/cpu.cfs_quota_us'', ''/sys/fs/cgroup/cpu/cpu.cfs_period_us''],
+                [''/sys/fs/cgroup/cpuacct/cpu.cfs_quota_us'', ''/sys/fs/cgroup/cpuacct/cpu.cfs_period_us'']
+            ];
+            for (var idxQuota = 0; idxQuota < quotaPairs.length; idxQuota++) {
+                var pair = quotaPairs[idxQuota];
+                var quotaPath = Paths.get(pair[0]);
+                var periodPath = Paths.get(pair[1]);
+                if (Files.exists(quotaPath) && Files.exists(periodPath)) {
+                    var quotaContent = new java.lang.String(Files.readAllBytes(quotaPath), StandardCharsets.UTF_8).trim();
+                    var periodContent = new java.lang.String(Files.readAllBytes(periodPath), StandardCharsets.UTF_8).trim();
+                    if (quotaContent.length() > 0 && periodContent.length() > 0) {
+                        var quotaValue = java.lang.Long.parseLong(quotaContent);
+                        var periodValue = java.lang.Long.parseLong(periodContent);
+                        if (quotaValue > 0 && periodValue > 0) {
+                            cpuLimitCount = quotaValue / periodValue;
                             break;
                         }
                     }
                 }
-                var quotaPairs = [
-                    [''/sys/fs/cgroup/cpu/cpu.cfs_quota_us'', ''/sys/fs/cgroup/cpu/cpu.cfs_period_us''],
-                    [''/sys/fs/cgroup/cpuacct/cpu.cfs_quota_us'', ''/sys/fs/cgroup/cpuacct/cpu.cfs_period_us'']
-                ];
-                for (var idxQuota = 0; idxQuota < quotaPairs.length; idxQuota++) {
-                    var pair = quotaPairs[idxQuota];
-                    var quotaPath = Paths.get(pair[0]);
-                    var periodPath = Paths.get(pair[1]);
-                    if (Files.exists(quotaPath) && Files.exists(periodPath)) {
-                        var quotaContent = new java.lang.String(Files.readAllBytes(quotaPath), StandardCharsets.UTF_8).trim();
-                        var periodContent = new java.lang.String(Files.readAllBytes(periodPath), StandardCharsets.UTF_8).trim();
-                        if (quotaContent.length() > 0 && periodContent.length() > 0) {
-                            var quotaValue = java.lang.Long.parseLong(quotaContent);
-                            var periodValue = java.lang.Long.parseLong(periodContent);
-                            if (quotaValue > 0 && periodValue > 0) {
-                                cpuLimitCount = quotaValue / periodValue;
-                                break;
-                            }
-                        }
+            }
+        }
+        if (usageNanos != null) {
+            var tracker = __metricsContainerCpu.get(trackerKey);
+            var previousUsage = tracker != null && tracker.containsKey(''usage'') ? tracker.get(''usage'') : null;
+            var previousTime = tracker != null && tracker.containsKey(''time'') ? tracker.get(''time'') : null;
+            var previousLimit = tracker != null && tracker.containsKey(''limit'') ? tracker.get(''limit'') : null;
+            var limitValue = cpuLimitCount != null ? cpuLimitCount : (previousLimit != null ? previousLimit.doubleValue() : null);
+            if (limitValue == null || limitValue <= 0) {
+                limitValue = osMx.getAvailableProcessors();
+            }
+            if (previousUsage != null && previousTime != null && limitValue > 0) {
+                var usageDelta = usageNanos - previousUsage.longValue();
+                var timeDeltaMillis = nowMillis - previousTime.longValue();
+                if (usageDelta >= 0 && timeDeltaMillis > 0) {
+                    var ratio = usageDelta / (timeDeltaMillis * 1000000.0 * limitValue);
+                    if (!java.lang.Double.isNaN(ratio) && !java.lang.Double.isInfinite(ratio)) {
+                        containerCpuLoad = ratio;
                     }
                 }
             }
-            if (usageNanos != null) {
-                var tracker = __metricsContainerCpu.get(trackerKey);
-                var previousUsage = tracker != null && tracker.containsKey(''usage'') ? tracker.get(''usage'') : null;
-                var previousTime = tracker != null && tracker.containsKey(''time'') ? tracker.get(''time'') : null;
-                var previousLimit = tracker != null && tracker.containsKey(''limit'') ? tracker.get(''limit'') : null;
-                var limitValue = cpuLimitCount != null ? cpuLimitCount : (previousLimit != null ? previousLimit.doubleValue() : null);
-                if (limitValue == null || limitValue <= 0) {
-                    limitValue = osMx.getAvailableProcessors();
-                }
-                if (previousUsage != null && previousTime != null && limitValue > 0) {
-                    var usageDelta = usageNanos - previousUsage.longValue();
-                    var timeDeltaMillis = nowMillis - previousTime.longValue();
-                    if (usageDelta >= 0 && timeDeltaMillis > 0) {
-                        var ratio = usageDelta / (timeDeltaMillis * 1000000.0 * limitValue);
-                        if (!java.lang.Double.isNaN(ratio) && !java.lang.Double.isInfinite(ratio)) {
-                            containerCpuLoad = ratio;
-                        }
-                    }
-                }
-                var trackerMap = new java.util.HashMap();
-                trackerMap.put(''usage'', java.lang.Long.valueOf(usageNanos));
-                trackerMap.put(''time'', java.lang.Long.valueOf(nowMillis));
-                if (limitValue != null && limitValue > 0) {
-                    trackerMap.put(''limit'', java.lang.Double.valueOf(limitValue));
-                }
-                __metricsContainerCpu.put(trackerKey, trackerMap);
+            var trackerMap = new java.util.HashMap();
+            trackerMap.put(''usage'', java.lang.Long.valueOf(usageNanos));
+            trackerMap.put(''time'', java.lang.Long.valueOf(nowMillis));
+            if (limitValue != null && limitValue > 0) {
+                trackerMap.put(''limit'', java.lang.Double.valueOf(limitValue));
             }
-        } catch (containerCpuError) {
-            containerCpuLoad = null;
+            __metricsContainerCpu.put(trackerKey, trackerMap);
         }
-        if (containerCpuLoad != null) {
-            containerCpuLoad = Math.max(0, Math.min(containerCpuLoad, 1));
-        }
-        var cpuTimeSupported = threadMx.isThreadCpuTimeSupported();
-        var cpuTimeEnabled = cpuTimeSupported ? threadMx.isThreadCpuTimeEnabled() : null;'
-    ↓metrics [steps.JsonObjectStep-1761312851921]: 
-      comment: Metrics root object exposed to the caller.
+    } catch (containerCpuError) {
+        containerCpuLoad = null;
+    }
+    if (containerCpuLoad != null) {
+        containerCpuLoad = Math.max(0, Math.min(containerCpuLoad, 1));
+    }
+    var cpuTimeSupported = threadMx.isThreadCpuTimeSupported();
+    var cpuTimeEnabled = cpuTimeSupported ? threadMx.isThreadCpuTimeEnabled() : null;'
+↓metrics [steps.JsonObjectStep-1761312851921]: 
+  comment: Metrics root object exposed to the caller.
+  key: 
+    - xmlizable: 
+      - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+      - SmartType: 
+        - ↑mode: PLAIN
+        - →→: metrics
+  ↓timestamp [steps.JsonFieldStep-1761312851923]: 
+    comment: Snapshot timestamp in ISO-8601 UTC.
+    key: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: PLAIN
+          - →→: timestamp
+    value: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: JS
+          - →→: isoStringNow()
+  ↓uptime [steps.JsonObjectStep-1761312851925]: 
+    comment: Uptime metrics in milliseconds.
+    key: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: PLAIN
+          - →→: uptime
+    ↓uptimeMillis [steps.JsonFieldStep-1761312851927]: 
       key: 
         - xmlizable: 
           - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
           - SmartType: 
             - ↑mode: PLAIN
-            - →→: metrics
-      ↓timestamp [steps.JsonFieldStep-1761312851923]: 
-        comment: Snapshot timestamp in ISO-8601 UTC.
+            - →→: millis
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: runtimeMx.getUptime()
+  ↓memory [steps.JsonObjectStep-1761312851929]: 
+    comment: Heap, non-heap, and runtime memory statistics.
+    key: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: PLAIN
+          - →→: memory
+    ↓heap [steps.JsonObjectStep-1761312851931]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: heap
+      ↓heapInitValue [steps.IfStep-1761312851933]: 
+        condition: heapUsage.getInit() >= 0
+        ↓heapInitNumber [steps.JsonFieldStep-1761312851935]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: init
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: heapUsage.getInit()
+      ↓heapInitNull [steps.IfStep-1761312851937]: 
+        condition: heapUsage.getInit() < 0
+        ↓heapInitNullField [steps.JsonFieldStep-1761312851939]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: init
+          type: nul
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: null
+      ↓heapUsed [steps.JsonFieldStep-1761312851941]: 
         key: 
           - xmlizable: 
             - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
             - SmartType: 
               - ↑mode: PLAIN
-              - →→: timestamp
+              - →→: used
+        type: number
         value: 
           - xmlizable: 
             - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
             - SmartType: 
               - ↑mode: JS
-              - →→: isoStringNow()
-      ↓uptime [steps.JsonObjectStep-1761312851925]: 
-        comment: Uptime metrics in milliseconds.
+              - →→: heapUsage.getUsed()
+      ↓heapCommitted [steps.JsonFieldStep-1761312851943]: 
         key: 
           - xmlizable: 
             - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
             - SmartType: 
               - ↑mode: PLAIN
-              - →→: uptime
-        ↓uptimeMillis [steps.JsonFieldStep-1761312851927]: 
+              - →→: committed
+        type: number
+        value: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: JS
+              - →→: heapUsage.getCommitted()
+      ↓heapMaxValue [steps.IfStep-1761312851945]: 
+        condition: heapUsage.getMax() >= 0
+        ↓heapMaxNumber [steps.JsonFieldStep-1761312851947]: 
           key: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
               - SmartType: 
                 - ↑mode: PLAIN
-                - →→: millis
+                - →→: max
           type: number
           value: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
               - SmartType: 
                 - ↑mode: JS
-                - →→: runtimeMx.getUptime()
-      ↓memory [steps.JsonObjectStep-1761312851929]: 
-        comment: Heap, non-heap, and runtime memory statistics.
+                - →→: heapUsage.getMax()
+      ↓heapMaxNull [steps.IfStep-1761312851949]: 
+        condition: heapUsage.getMax() < 0
+        ↓heapMaxNullField [steps.JsonFieldStep-1761312851951]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: max
+          type: nul
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: null
+    ↓nonHeap [steps.JsonObjectStep-1761312851953]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: nonHeap
+      ↓nonHeapInitValue [steps.IfStep-1761312851955]: 
+        condition: nonHeapUsage.getInit() >= 0
+        ↓nonHeapInitNumber [steps.JsonFieldStep-1761312851957]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: init
+          type: number
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: nonHeapUsage.getInit()
+      ↓nonHeapInitNull [steps.IfStep-1761312851959]: 
+        condition: nonHeapUsage.getInit() < 0
+        ↓nonHeapInitNullField [steps.JsonFieldStep-1761312851961]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: init
+          type: nul
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: null
+      ↓nonHeapUsed [steps.JsonFieldStep-1761312851963]: 
         key: 
           - xmlizable: 
             - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
             - SmartType: 
               - ↑mode: PLAIN
-              - →→: memory
-        ↓heap [steps.JsonObjectStep-1761312851931]: 
-          key: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: PLAIN
-                - →→: heap
-          ↓heapInitValue [steps.IfStep-1761312851933]: 
-            condition: heapUsage.getInit() >= 0
-            ↓heapInitNumber [steps.JsonFieldStep-1761312851935]: 
-              key: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: PLAIN
-                    - →→: init
-              type: number
-              value: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: JS
-                    - →→: heapUsage.getInit()
-          ↓heapInitNull [steps.IfStep-1761312851937]: 
-            condition: heapUsage.getInit() < 0
-            ↓heapInitNullField [steps.JsonFieldStep-1761312851939]: 
-              key: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: PLAIN
-                    - →→: init
-              type: nul
-              value: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: JS
-                    - →→: null
-          ↓heapUsed [steps.JsonFieldStep-1761312851941]: 
-            key: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: PLAIN
-                  - →→: used
-            type: number
-            value: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: JS
-                  - →→: heapUsage.getUsed()
-          ↓heapCommitted [steps.JsonFieldStep-1761312851943]: 
-            key: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: PLAIN
-                  - →→: committed
-            type: number
-            value: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: JS
-                  - →→: heapUsage.getCommitted()
-          ↓heapMaxValue [steps.IfStep-1761312851945]: 
-            condition: heapUsage.getMax() >= 0
-            ↓heapMaxNumber [steps.JsonFieldStep-1761312851947]: 
-              key: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: PLAIN
-                    - →→: max
-              type: number
-              value: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: JS
-                    - →→: heapUsage.getMax()
-          ↓heapMaxNull [steps.IfStep-1761312851949]: 
-            condition: heapUsage.getMax() < 0
-            ↓heapMaxNullField [steps.JsonFieldStep-1761312851951]: 
-              key: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: PLAIN
-                    - →→: max
-              type: nul
-              value: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: JS
-                    - →→: null
-        ↓nonHeap [steps.JsonObjectStep-1761312851953]: 
-          key: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: PLAIN
-                - →→: nonHeap
-          ↓nonHeapInitValue [steps.IfStep-1761312851955]: 
-            condition: nonHeapUsage.getInit() >= 0
-            ↓nonHeapInitNumber [steps.JsonFieldStep-1761312851957]: 
-              key: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: PLAIN
-                    - →→: init
-              type: number
-              value: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: JS
-                    - →→: nonHeapUsage.getInit()
-          ↓nonHeapInitNull [steps.IfStep-1761312851959]: 
-            condition: nonHeapUsage.getInit() < 0
-            ↓nonHeapInitNullField [steps.JsonFieldStep-1761312851961]: 
-              key: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: PLAIN
-                    - →→: init
-              type: nul
-              value: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: JS
-                    - →→: null
-          ↓nonHeapUsed [steps.JsonFieldStep-1761312851963]: 
-            key: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: PLAIN
-                  - →→: used
-            type: number
-            value: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: JS
-                  - →→: nonHeapUsage.getUsed()
-          ↓nonHeapCommitted [steps.JsonFieldStep-1761312851965]: 
-            key: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: PLAIN
-                  - →→: committed
-            type: number
-            value: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: JS
-                  - →→: nonHeapUsage.getCommitted()
-          ↓nonHeapMaxValue [steps.IfStep-1761312851967]: 
-            condition: nonHeapUsage.getMax() >= 0
-            ↓nonHeapMaxNumber [steps.JsonFieldStep-1761312851969]: 
-              key: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: PLAIN
-                    - →→: max
-              type: number
-              value: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: JS
-                    - →→: nonHeapUsage.getMax()
-          ↓nonHeapMaxNull [steps.IfStep-1761312851971]: 
-            condition: nonHeapUsage.getMax() < 0
-            ↓nonHeapMaxNullField [steps.JsonFieldStep-1761312851973]: 
-              key: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: PLAIN
-                    - →→: max
-              type: nul
-              value: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: JS
-                    - →→: null
-        ↓runtimeMemory [steps.JsonObjectStep-1761312851975]: 
-          key: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: PLAIN
-                - →→: runtime
-          ↓runtimeFree [steps.JsonFieldStep-1761312851977]: 
-            key: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: PLAIN
-                  - →→: free
-            type: number
-            value: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: JS
-                  - →→: runtime.freeMemory()
-          ↓runtimeTotal [steps.JsonFieldStep-1761312851979]: 
-            key: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: PLAIN
-                  - →→: total
-            type: number
-            value: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: JS
-                  - →→: runtime.totalMemory()
-          ↓runtimeMax [steps.JsonFieldStep-1761312851981]: 
-            key: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: PLAIN
-                  - →→: max
-            type: number
-            value: 
-              - xmlizable: 
-                - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                - SmartType: 
-                  - ↑mode: JS
-                  - →→: runtime.maxMemory()
-      ↓threads [steps.JsonObjectStep-1761312851983]: 
-        comment: Thread pool and CPU usage indicators.
+              - →→: used
+        type: number
+        value: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: JS
+              - →→: nonHeapUsage.getUsed()
+      ↓nonHeapCommitted [steps.JsonFieldStep-1761312851965]: 
         key: 
           - xmlizable: 
             - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
             - SmartType: 
               - ↑mode: PLAIN
-              - →→: threads
-        ↓threadCount [steps.JsonFieldStep-1761312851985]: 
+              - →→: committed
+        type: number
+        value: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: JS
+              - →→: nonHeapUsage.getCommitted()
+      ↓nonHeapMaxValue [steps.IfStep-1761312851967]: 
+        condition: nonHeapUsage.getMax() >= 0
+        ↓nonHeapMaxNumber [steps.JsonFieldStep-1761312851969]: 
           key: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
               - SmartType: 
                 - ↑mode: PLAIN
-                - →→: count
+                - →→: max
           type: number
           value: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
               - SmartType: 
                 - ↑mode: JS
-                - →→: threadMx.getThreadCount()
-        ↓threadDaemon [steps.JsonFieldStep-1761312851987]: 
+                - →→: nonHeapUsage.getMax()
+      ↓nonHeapMaxNull [steps.IfStep-1761312851971]: 
+        condition: nonHeapUsage.getMax() < 0
+        ↓nonHeapMaxNullField [steps.JsonFieldStep-1761312851973]: 
           key: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
               - SmartType: 
                 - ↑mode: PLAIN
-                - →→: daemon
+                - →→: max
+          type: nul
+          value: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: JS
+                - →→: null
+    ↓runtimeMemory [steps.JsonObjectStep-1761312851975]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: runtime
+      ↓runtimeFree [steps.JsonFieldStep-1761312851977]: 
+        key: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: PLAIN
+              - →→: free
+        type: number
+        value: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: JS
+              - →→: runtime.freeMemory()
+      ↓runtimeTotal [steps.JsonFieldStep-1761312851979]: 
+        key: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: PLAIN
+              - →→: total
+        type: number
+        value: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: JS
+              - →→: runtime.totalMemory()
+      ↓runtimeMax [steps.JsonFieldStep-1761312851981]: 
+        key: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: PLAIN
+              - →→: max
+        type: number
+        value: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+            - SmartType: 
+              - ↑mode: JS
+              - →→: runtime.maxMemory()
+  ↓threads [steps.JsonObjectStep-1761312851983]: 
+    comment: Thread pool and CPU usage indicators.
+    key: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+        - SmartType: 
+          - ↑mode: PLAIN
+          - →→: threads
+    ↓threadCount [steps.JsonFieldStep-1761312851985]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: count
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: threadMx.getThreadCount()
+    ↓threadDaemon [steps.JsonFieldStep-1761312851987]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: daemon
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: threadMx.getDaemonThreadCount()
+    ↓threadPeak [steps.JsonFieldStep-1761312851989]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: peak
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: threadMx.getPeakThreadCount()
+    ↓threadTotalStarted [steps.JsonFieldStep-1761312851991]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: totalStarted
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: threadMx.getTotalStartedThreadCount()
+    ↓threadDeadlockedCount [steps.JsonFieldStep-1761312851993]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: deadlockedCount
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: deadlockedIds.length
+    ↓processCpuLoad [steps.JsonFieldStep-1762013000001]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: processCpuLoad
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: 'comSunOsMx != null ? comSunOsMx.getProcessCpuLoad() : null'
+    ↓systemCpuLoad [steps.JsonFieldStep-1762013000003]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: systemCpuLoad
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: 'comSunOsMx != null ? comSunOsMx.getSystemCpuLoad() : null'
+    ↓containerCpuLoad [steps.JsonFieldStep-1762013000005]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: containerCpuLoad
+      type: number
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: containerCpuLoad
+    ↓deadlockedIds [steps.JsonArrayStep-1761312851995]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: deadlockedIds
+      ↓deadlockedIterator [steps.SimpleIteratorStep-1761312851997]: 
+        expression: deadlockedIds
+        ↓deadlockedId [steps.JsonFieldStep-1761312851999]: 
+          key: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+              - SmartType: 
+                - ↑mode: PLAIN
+                - →→: id
           type: number
           value: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
               - SmartType: 
                 - ↑mode: JS
-                - →→: threadMx.getDaemonThreadCount()
-        ↓threadPeak [steps.JsonFieldStep-1761312851989]: 
-          key: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: PLAIN
-                - →→: peak
-          type: number
-          value: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: JS
-                - →→: threadMx.getPeakThreadCount()
-        ↓threadTotalStarted [steps.JsonFieldStep-1761312851991]: 
-          key: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: PLAIN
-                - →→: totalStarted
-          type: number
-          value: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: JS
-                - →→: threadMx.getTotalStartedThreadCount()
-        ↓threadDeadlockedCount [steps.JsonFieldStep-1761312851993]: 
-          key: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: PLAIN
-                - →→: deadlockedCount
-          type: number
-          value: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: JS
-                - →→: deadlockedIds.length
-        ↓processCpuLoad [steps.JsonFieldStep-1762013000001]: 
-          key: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: PLAIN
-                - →→: processCpuLoad
-          type: number
-          value: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: JS
-                - →→: 'comSunOsMx != null ? comSunOsMx.getProcessCpuLoad() : null'
-        ↓systemCpuLoad [steps.JsonFieldStep-1762013000003]: 
-          key: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: PLAIN
-                - →→: systemCpuLoad
-          type: number
-          value: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: JS
-                - →→: 'comSunOsMx != null ? comSunOsMx.getSystemCpuLoad() : null'
-        ↓containerCpuLoad [steps.JsonFieldStep-1762013000005]: 
-          key: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: PLAIN
-                - →→: containerCpuLoad
-          type: number
-          value: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: JS
-                - →→: containerCpuLoad
-        ↓deadlockedIds [steps.JsonArrayStep-1761312851995]: 
-          key: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: PLAIN
-                - →→: deadlockedIds
-          ↓deadlockedIterator [steps.SimpleIteratorStep-1761312851997]: 
-            expression: deadlockedIds
-            ↓deadlockedId [steps.JsonFieldStep-1761312851999]: 
-              key: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: PLAIN
-                    - →→: id
-              type: number
-              value: 
-                - xmlizable: 
-                  - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-                  - SmartType: 
-                    - ↑mode: JS
-                    - →→: item
-        ↓cpuTimeEnabled [steps.JsonFieldStep-1761312852001]: 
-          key: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: PLAIN
-                - →→: cpuTimeEnabled
-          type: bool
-          value: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
-              - SmartType: 
-                - ↑mode: JS
-                - →→: cpuTimeEnabled
+                - →→: item
+    ↓cpuTimeEnabled [steps.JsonFieldStep-1761312852001]: 
+      key: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: PLAIN
+            - →→: cpuTimeEnabled
+      type: bool
+      value: 
+        - xmlizable: 
+          - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
+          - SmartType: 
+            - ↑mode: JS
+            - →→: cpuTimeEnabled

@@ -485,7 +485,6 @@ title: Threads
           beanData: '{"ionBean":"Icon","IconName":"plain:refresh"}'
           tagName: ion-icon
         ↓Event [ngx.components.UIControlEvent-1761575995371]: 
-          attrName: (click)
           eventName: (click)
           ↓PublishEvent [ngx.components.UIDynamicAction-1761575995373]: 
             beanData: '{"ionBean":"PublishEventAction","topic":"plain:refreshThreads"}'
@@ -502,7 +501,6 @@ title: Threads
           beanData: '{"ionBean":"Icon","IconName":"script:this.themeIcon()"}'
           tagName: ion-icon
         ↓Event [ngx.components.UIControlEvent-1762017202007]: 
-          attrName: (click)
           eventName: (click)
           ↓ToggleTheme [ngx.components.UICustomAction-1762017202009]: 
             actionValue: 

@@ -234,7 +234,6 @@ title: Thread Details
           beanData: '{"ionBean":"Icon","IconName":"plain:refresh"}'
           tagName: ion-icon
         ↓Event [ngx.components.UIControlEvent-1761583001021]: 
-          attrName: (click)
           eventName: (click)
           ↓RefreshDetails [ngx.components.UIDynamicAction-1761584002001]: 
             beanData: '{"ionBean":"CallSequenceAction","requestable":"plain:ConvertigoMonitor.ThreadDetails"}'
@@ -272,7 +271,6 @@ title: Thread Details
           beanData: '{"ionBean":"Icon","IconName":"script:this.themeIcon()"}'
           tagName: ion-icon
         ↓Event [ngx.components.UIControlEvent-1762017203007]: 
-          attrName: (click)
           eventName: (click)
           ↓ToggleTheme [ngx.components.UICustomAction-1762017203009]: 
             actionValue: 
