@@ -1,5 +1,5 @@
 ↑isRoot: true
-comment: My First Page as root page
+comment: Metrics dashboard root page
 preloadPriority: high
 scriptContent: 
   - xmlizable: 
@@ -25,10 +25,131 @@ scriptContent:
         		const last = Array.isArray(series) && series.length ? series[series.length - 1] : null;
         		return last == null ? seriesName : `${seriesName} · ${this.formatMemory(last)}`;
         	};
+        	
+        	public latestPoint(): any {
+        		const history = Array.isArray(this.global.metricsHistory) ? this.global.metricsHistory : [];
+        		return history.length ? history[history.length - 1] : null;
+        	}
+        	
+        	public previousPoint(): any {
+        		const history = Array.isArray(this.global.metricsHistory) ? this.global.metricsHistory : [];
+        		return history.length > 1 ? history[history.length - 2] : null;
+        	}
+        	
+        	public latestField(field: string): number | null {
+        		const latest = this.latestPoint();
+        		if (!latest || typeof latest[field] !== 'number' || isNaN(latest[field])) {
+        			return null;
+        		}
+        		return latest[field];
+        	}
+        	
+        	public previousField(field: string): number | null {
+        		const previous = this.previousPoint();
+        		if (!previous || typeof previous[field] !== 'number' || isNaN(previous[field])) {
+        			return null;
+        		}
+        		return previous[field];
+        	}
+        	
+        	public formatSampleTime(): string {
+        		const timestamp = this.latestPoint() && typeof this.latestPoint().x === 'number' ? this.latestPoint().x : null;
+        		if (timestamp == null) {
+        			return 'Awaiting first sample';
+        		}
+        		const date = new Date(timestamp);
+        		if (isNaN(date.getTime())) {
+        			return 'Invalid timestamp';
+        		}
+        		const pad = (value: number) => value < 10 ? '0' + value : value.toString();
+        		return pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds());
+        	}
+        	
+        	public usagePercent(): string {
+        		const used = this.latestField('used');
+        		const max = this.latestField('max');
+        		if (used == null || max == null || max <= 0) {
+        			return 'n/a';
+        		}
+        		return ((used / max) * 100).toFixed(1) + ' %';
+        	}
+        	
+        	public usageSummary(): string {
+        		const used = this.latestField('used');
+        		const max = this.latestField('max');
+        		if (used == null && max == null) {
+        			return 'No memory data';
+        		}
+        		if (used == null) {
+        			return 'Used · n/a';
+        		}
+        		if (max == null) {
+        			return 'Used · ' + this.formatMemory(used);
+        		}
+        		return this.formatMemory(used) + ' / ' + this.formatMemory(max);
+        	}
+        	
+        	public formatDelta(field: string): string {
+        		const latest = this.latestField(field);
+        		const previous = this.previousField(field);
+        		if (latest == null || previous == null) {
+        			return 'n/a';
+        		}
+        		const delta = latest - previous;
+        		if (!isFinite(delta) || Math.abs(delta) < 0.01) {
+        			return '+/-0 MB';
+        		}
+        		const prefix = delta > 0 ? '+' : '''';
+        		return prefix + delta.toFixed(2) + ' MB';
+        	}
+        	
+        	public samplesCount(): number {
+        		const history = Array.isArray(this.global.metricsHistory) ? this.global.metricsHistory : [];
+        		return history.length;
+        	}
+        	
+        	public samplesCountLabel(): string {
+        		const count = this.samplesCount();
+        		return count ? count + ' samples collected' : 'No samples yet';
+        	}
+        	
+        	public samplesWindowLabel(): string {
+        		const limit = Number(this.global.metricsMaxPoints);
+        		return limit > 0 ? 'Window · ' + limit + ' points' : 'Window size unavailable';
+        	}
+        	
+        	public refreshRateValue(): string {
+        		const delay = Number(this.global.refreshMetrics);
+        		if (!delay || delay <= 0) {
+        			return '--';
+        		}
+        		if (delay >= 1000) {
+        			const seconds = delay / 1000;
+        			return seconds % 1 === 0 ? seconds.toFixed(0) + ' s' : seconds.toFixed(1) + ' s';
+        		}
+        		return delay.toFixed(0) + ' ms';
+        	}
+        	
+        	public refreshRateLabel(): string {
+        		const delay = Number(this.global.refreshMetrics);
+        		return delay > 0 ? 'Auto refresh enabled' : 'Refresh cadence unavailable';
+        	}
+        	
+        	public formatLastUpdateLabel(): string {
+        		const latest = this.latestPoint();
+        		if (!latest || typeof latest.x !== 'number') {
+        			return 'Last update · awaiting data';
+        		}
+        		const date = new Date(latest.x);
+        		if (isNaN(date.getTime())) {
+        			return 'Last update · invalid timestamp';
+        		}
+        		return 'Last update · ' + date.toLocaleString();
+        	}
         	/*End_c8o_PageFunction*/
         '
 segment: metrics
-title: First page
+title: Metrics dashboard
 ↓Header [ngx.components.UIDynamicElement-1491634212350]: 
   beanData: '{"ionBean":"Header"}'
   comment: Page header
@@ -52,7 +173,7 @@ title: First page
         textValue: 
           - xmlizable: 
             - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-            - MobileSmartSourceType: plain:Metrics
+            - MobileSmartSourceType: plain:Metrics dashboard
     ↓ButtonSet2 [ngx.components.UIDynamicElement-1588170811054]: 
       beanData: '{"ionBean":"ButtonSet","SetPosition":"plain:end"}'
       tagName: ion-buttons
@@ -66,124 +187,600 @@ title: First page
   beanData: '{"ionBean":"Content"}'
   comment: Page content
   tagName: ion-content
-  ↓TextItem [ngx.components.UIDynamicElement-1761322916480]: 
-    beanData: '{"ionBean":"TextItem"}'
-    tagName: ion-text
-    ↓Text [ngx.components.UIText-1761322916479]: 
-      textValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: plain:Memories
-  ↓UseSharedComponent [ngx.components.UIUseShared-1761315132024]: 
-    identifier: memory
-    sharedcomponent: libApexCharts.Application.NgxApp.apxChart
-    ↓chart [ngx.components.UIUseVariable-1761315225089]: 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: 'script:{ type: ''line'', height: 350, animations: { enabled: false }, zoom: { enabled: false }, toolbar: { show: false } }'
-    ↓annotations [ngx.components.UIUseVariable-1761315225091]: 
-      comment: |
-        Annotations in ApexCharts allows you to write custom text on specific data-points or on axes values.
-        For more information please visit [Series documentation](https://apexcharts.com/docs/annotations/) 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
-    ↓colors [ngx.components.UIUseVariable-1761315225093]: 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:['#1e88e5', '#20c997', '#ff922b', '#fa5252']
-    ↓dataLabels [ngx.components.UIUseVariable-1761315225095]: 
-      comment: |
-        Data Labels are the actual values which are passed in the series. You can add formatters which will allow you to modify values before displaying.
-        For more information please visit [Series documentation](https://apexcharts.com/docs/datalabels/) 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: 'script:{ enabled: false }'
-    ↓series [ngx.components.UIUseVariable-1761315225097]: 
-      comment: |
-        The series is a set of data. You may have single or multiple data series.
-        For more information please visit [Series documentation](https://apexcharts.com/docs/series/) 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: source:{"filter":"Global","project":"ConvertigoMonitor","input":"","model":{"data":[{"sharedObject":"router.sharedObject"}],"path":"?.metricsSeries","prefix":"","suffix":"","custom":"","useCustom":false}}
-    ↓stroke [ngx.components.UIUseVariable-1761315225099]: 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: 'script:{ curve: ''smooth'', width: [2, 2, 2, 2] }'
-    ↓labels [ngx.components.UIUseVariable-1761315225101]: 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
-    ↓legend [ngx.components.UIUseVariable-1761315225103]: 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: 'script:{ position: ''top'', formatter: this.formatLegend }'
-    ↓fill [ngx.components.UIUseVariable-1761315225105]: 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: 'script:{ type: ''solid'', opacity: 1 }'
-    ↓tooltip [ngx.components.UIUseVariable-1761315225107]: 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: 'script:{ x: { format: ''HH:mm:ss'' }, y: { formatter: this.formatMemory } }'
-    ↓plotOptions [ngx.components.UIUseVariable-1761315225109]: 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
-    ↓responsive [ngx.components.UIUseVariable-1761315225111]: 
-      comment: |
-        You can configure different options for different screen sizes and ApexCharts will override the configuration based on breakpoints defined.
-        For more information please visit [Series documentation](https://apexcharts.com/docs/responsive/) 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
-    ↓xaxis [ngx.components.UIUseVariable-1761315225113]: 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: 'script:{ type: ''datetime'', range: 120000, labels: { format: ''HH:mm:ss'' } }'
-    ↓yaxis [ngx.components.UIUseVariable-1761315225115]: 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: 'script:[{ labels: { formatter: this.formatMemory } }]'
-    ↓grid [ngx.components.UIUseVariable-1761315225117]: 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: 'script:{ strokeDashArray: 2, borderColor: ''#e9ecef'' }'
-    ↓states [ngx.components.UIUseVariable-1761315225119]: 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
-    ↓title [ngx.components.UIUseVariable-1761315225121]: 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
-    ↓subtitle [ngx.components.UIUseVariable-1761315225123]: 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
-    ↓theme [ngx.components.UIUseVariable-1761315225125]: 
-      varValue: 
-        - xmlizable: 
-          - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-          - MobileSmartSourceType: script:null
+  ↓OverviewCard [ngx.components.UIDynamicElement-1762010000001]: 
+    beanData: '{"ionBean":"Card"}'
+    tagName: ion-card
+    ↓CardHeader [ngx.components.UIDynamicElement-1762010000003]: 
+      beanData: '{"ionBean":"CardHeader"}'
+      tagName: ion-card-header
+      ↓CardTitle [ngx.components.UIDynamicElement-1762010000005]: 
+        beanData: '{"ionBean":"CardTitle"}'
+        tagName: ion-card-title
+        ↓Text [ngx.components.UIText-1762010000007]: 
+          textValue: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+              - MobileSmartSourceType: plain:Runtime overview
+      ↓CardSubTitle [ngx.components.UIDynamicElement-1762010000009]: 
+        beanData: '{"ionBean":"CardSubTitle"}'
+        tagName: ion-card-subtitle
+        ↓Text [ngx.components.UIText-1762010000011]: 
+          textValue: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+              - MobileSmartSourceType: script:this.formatLastUpdateLabel()
+    ↓CardContent [ngx.components.UIDynamicElement-1762010000013]: 
+      beanData: '{"ionBean":"CardContent"}'
+      tagName: ion-card-content
+      ↓Grid [ngx.components.UIElement-1762010000015]: 
+        tagName: ion-grid
+        ↓RowPrimary [ngx.components.UIElement-1762010000017]: 
+          tagName: ion-row
+          ↓ColUsed [ngx.components.UIElement-1762010000019]: 
+            tagName: ion-col
+            ↓AttrSize [ngx.components.UIAttribute-1762010000021]: 
+              attrName: size
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:12
+            ↓AttrSizeMd [ngx.components.UIAttribute-1762010000023]: 
+              attrName: size-md
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:4
+            ↓LabelUsed [ngx.components.UIDynamicElement-1762010000025]: 
+              beanData: '{"ionBean":"TextItem"}'
+              tagName: ion-text
+              ↓AttrColor [ngx.components.UIAttribute-1762010000027]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:medium
+              ↓Text [ngx.components.UIText-1762010000029]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Used memory
+            ↓ValueUsed [ngx.components.UIElement-1762010000031]: 
+              tagName: h2
+              ↓Text [ngx.components.UIText-1762010000033]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:this.formatMemory(this.latestField(''used''))'
+            ↓DeltaUsed [ngx.components.UIDynamicElement-1762010000035]: 
+              beanData: '{"ionBean":"Note"}'
+              tagName: ion-note
+              ↓AttrColor [ngx.components.UIAttribute-1762010000037]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:medium
+              ↓Text [ngx.components.UIText-1762010000039]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:''Delta '' + this.formatDelta(''used'')'
+          ↓ColCommitted [ngx.components.UIElement-1762010000041]: 
+            tagName: ion-col
+            ↓AttrSize [ngx.components.UIAttribute-1762010000043]: 
+              attrName: size
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:12
+            ↓AttrSizeMd [ngx.components.UIAttribute-1762010000045]: 
+              attrName: size-md
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:4
+            ↓LabelCommitted [ngx.components.UIDynamicElement-1762010000047]: 
+              beanData: '{"ionBean":"TextItem"}'
+              tagName: ion-text
+              ↓AttrColor [ngx.components.UIAttribute-1762010000049]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:medium
+              ↓Text [ngx.components.UIText-1762010000051]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Committed
+            ↓ValueCommitted [ngx.components.UIElement-1762010000053]: 
+              tagName: h2
+              ↓Text [ngx.components.UIText-1762010000055]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:this.formatMemory(this.latestField(''committed''))'
+            ↓DeltaCommitted [ngx.components.UIDynamicElement-1762010000057]: 
+              beanData: '{"ionBean":"Note"}'
+              tagName: ion-note
+              ↓AttrColor [ngx.components.UIAttribute-1762010000059]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:medium
+              ↓Text [ngx.components.UIText-1762010000061]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:''Delta '' + this.formatDelta(''committed'')'
+          ↓ColMax [ngx.components.UIElement-1762010000063]: 
+            tagName: ion-col
+            ↓AttrSize [ngx.components.UIAttribute-1762010000065]: 
+              attrName: size
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:12
+            ↓AttrSizeMd [ngx.components.UIAttribute-1762010000067]: 
+              attrName: size-md
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:4
+            ↓LabelMax [ngx.components.UIDynamicElement-1762010000069]: 
+              beanData: '{"ionBean":"TextItem"}'
+              tagName: ion-text
+              ↓AttrColor [ngx.components.UIAttribute-1762010000071]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:medium
+              ↓Text [ngx.components.UIText-1762010000073]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Max capacity
+            ↓ValueMax [ngx.components.UIElement-1762010000075]: 
+              tagName: h2
+              ↓Text [ngx.components.UIText-1762010000077]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:this.formatMemory(this.latestField(''max''))'
+            ↓DeltaMax [ngx.components.UIDynamicElement-1762010000079]: 
+              beanData: '{"ionBean":"Note"}'
+              tagName: ion-note
+              ↓AttrColor [ngx.components.UIAttribute-1762010000081]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:medium
+              ↓Text [ngx.components.UIText-1762010000083]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:''Delta '' + this.formatDelta(''max'')'
+        ↓RowSecondary [ngx.components.UIElement-1762010000085]: 
+          tagName: ion-row
+          ↓ColUsage [ngx.components.UIElement-1762010000087]: 
+            tagName: ion-col
+            ↓AttrSize [ngx.components.UIAttribute-1762010000089]: 
+              attrName: size
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:12
+            ↓AttrSizeMd [ngx.components.UIAttribute-1762010000091]: 
+              attrName: size-md
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:4
+            ↓LabelUsage [ngx.components.UIDynamicElement-1762010000093]: 
+              beanData: '{"ionBean":"TextItem"}'
+              tagName: ion-text
+              ↓AttrColor [ngx.components.UIAttribute-1762010000095]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:medium
+              ↓Text [ngx.components.UIText-1762010000097]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Usage ratio
+            ↓ValueUsage [ngx.components.UIElement-1762010000099]: 
+              tagName: h2
+              ↓Text [ngx.components.UIText-1762010000101]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: script:this.usagePercent()
+            ↓NoteUsage [ngx.components.UIDynamicElement-1762010000103]: 
+              beanData: '{"ionBean":"Note"}'
+              tagName: ion-note
+              ↓AttrColor [ngx.components.UIAttribute-1762010000105]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:medium
+              ↓Text [ngx.components.UIText-1762010000107]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: script:this.usageSummary()
+          ↓ColSamples [ngx.components.UIElement-1762010000109]: 
+            tagName: ion-col
+            ↓AttrSize [ngx.components.UIAttribute-1762010000111]: 
+              attrName: size
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:12
+            ↓AttrSizeMd [ngx.components.UIAttribute-1762010000113]: 
+              attrName: size-md
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:4
+            ↓LabelSamples [ngx.components.UIDynamicElement-1762010000115]: 
+              beanData: '{"ionBean":"TextItem"}'
+              tagName: ion-text
+              ↓AttrColor [ngx.components.UIAttribute-1762010000117]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:medium
+              ↓Text [ngx.components.UIText-1762010000119]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Samples collected
+            ↓ValueSamples [ngx.components.UIElement-1762010000121]: 
+              tagName: h2
+              ↓Text [ngx.components.UIText-1762010000123]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:(this.samplesCount() != null ? ('''' + this.samplesCount()) : ''0'')'
+            ↓NoteSamples [ngx.components.UIDynamicElement-1762010000125]: 
+              beanData: '{"ionBean":"Note"}'
+              tagName: ion-note
+              ↓AttrColor [ngx.components.UIAttribute-1762010000127]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:medium
+              ↓Text [ngx.components.UIText-1762010000129]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: script:this.samplesWindowLabel()
+          ↓ColRefresh [ngx.components.UIElement-1762010000131]: 
+            tagName: ion-col
+            ↓AttrSize [ngx.components.UIAttribute-1762010000133]: 
+              attrName: size
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:12
+            ↓AttrSizeMd [ngx.components.UIAttribute-1762010000135]: 
+              attrName: size-md
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:4
+            ↓LabelRefresh [ngx.components.UIDynamicElement-1762010000137]: 
+              beanData: '{"ionBean":"TextItem"}'
+              tagName: ion-text
+              ↓AttrColor [ngx.components.UIAttribute-1762010000139]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:medium
+              ↓Text [ngx.components.UIText-1762010000141]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Refresh cadence
+            ↓ValueRefresh [ngx.components.UIElement-1762010000143]: 
+              tagName: h2
+              ↓Text [ngx.components.UIText-1762010000145]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: script:this.refreshRateValue()
+            ↓NoteRefresh [ngx.components.UIDynamicElement-1762010000147]: 
+              beanData: '{"ionBean":"Note"}'
+              tagName: ion-note
+              ↓AttrColor [ngx.components.UIAttribute-1762010000149]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:medium
+              ↓Text [ngx.components.UIText-1762010000151]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: script:this.refreshRateLabel()
+  ↓ChartCard [ngx.components.UIDynamicElement-1762010000153]: 
+    beanData: '{"ionBean":"Card"}'
+    tagName: ion-card
+    ↓CardHeader [ngx.components.UIDynamicElement-1762010000155]: 
+      beanData: '{"ionBean":"CardHeader"}'
+      tagName: ion-card-header
+      ↓CardTitle [ngx.components.UIDynamicElement-1762010000157]: 
+        beanData: '{"ionBean":"CardTitle"}'
+        tagName: ion-card-title
+        ↓Text [ngx.components.UIText-1762010000159]: 
+          textValue: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+              - MobileSmartSourceType: plain:Heap history
+      ↓CardSubTitle [ngx.components.UIDynamicElement-1762010000161]: 
+        beanData: '{"ionBean":"CardSubTitle"}'
+        tagName: ion-card-subtitle
+        ↓Text [ngx.components.UIText-1762010000163]: 
+          textValue: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+              - MobileSmartSourceType: script:this.samplesCountLabel()
+    ↓CardContent [ngx.components.UIDynamicElement-1762010000165]: 
+      beanData: '{"ionBean":"CardContent"}'
+      tagName: ion-card-content
+      ↓DirectiveChart [ngx.components.UIControlDirective-1762010000167]: 
+        directiveName: If
+        directiveSource: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: script:this.samplesCount() > 0
+        ↓UseSharedComponent [ngx.components.UIUseShared-1761315132024]: 
+          identifier: memory
+          sharedcomponent: libApexCharts.Application.NgxApp.apxChart
+          ↓chart [ngx.components.UIUseVariable-1761315225089]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ type: ''line'', height: 350, animations: { enabled: false }, zoom: { enabled: false }, toolbar: { show: false } }'
+          ↓annotations [ngx.components.UIUseVariable-1761315225091]: 
+            comment: |
+              Annotations in ApexCharts allows you to write custom text on specific data-points or on axes values.
+              For more information please visit [Series documentation](https://apexcharts.com/docs/annotations/) 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓colors [ngx.components.UIUseVariable-1761315225093]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:['#1e88e5', '#20c997', '#ff922b', '#fa5252']
+          ↓dataLabels [ngx.components.UIUseVariable-1761315225095]: 
+            comment: |
+              Data Labels are the actual values which are passed in the series. You can add formatters which will allow you to modify values before displaying.
+              For more information please visit [Series documentation](https://apexcharts.com/docs/datalabels/) 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ enabled: false }'
+          ↓series [ngx.components.UIUseVariable-1761315225097]: 
+            comment: |
+              The series is a set of data. You may have single or multiple data series.
+              For more information please visit [Series documentation](https://apexcharts.com/docs/series/) 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: source:{"filter":"Global","project":"ConvertigoMonitor","input":"","model":{"data":[{"sharedObject":"router.sharedObject"}],"path":"?.metricsSeries","prefix":"","suffix":"","custom":"","useCustom":false}}
+          ↓stroke [ngx.components.UIUseVariable-1761315225099]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ curve: ''smooth'', width: [2, 2, 2, 2] }'
+          ↓labels [ngx.components.UIUseVariable-1761315225101]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓legend [ngx.components.UIUseVariable-1761315225103]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ position: ''top'', formatter: this.formatLegend }'
+          ↓fill [ngx.components.UIUseVariable-1761315225105]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ type: ''solid'', opacity: 1 }'
+          ↓tooltip [ngx.components.UIUseVariable-1761315225107]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ x: { format: ''HH:mm:ss'' }, y: { formatter: this.formatMemory } }'
+          ↓plotOptions [ngx.components.UIUseVariable-1761315225109]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓responsive [ngx.components.UIUseVariable-1761315225111]: 
+            comment: |
+              You can configure different options for different screen sizes and ApexCharts will override the configuration based on breakpoints defined.
+              For more information please visit [Series documentation](https://apexcharts.com/docs/responsive/) 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓xaxis [ngx.components.UIUseVariable-1761315225113]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ type: ''datetime'', range: 120000, labels: { format: ''HH:mm:ss'' } }'
+          ↓yaxis [ngx.components.UIUseVariable-1761315225115]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:[{ labels: { formatter: this.formatMemory } }]'
+          ↓grid [ngx.components.UIUseVariable-1761315225117]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ strokeDashArray: 2, borderColor: ''#e9ecef'' }'
+          ↓states [ngx.components.UIUseVariable-1761315225119]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓title [ngx.components.UIUseVariable-1761315225121]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓subtitle [ngx.components.UIUseVariable-1761315225123]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓theme [ngx.components.UIUseVariable-1761315225125]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+      ↓DirectiveEmpty [ngx.components.UIControlDirective-1762010000169]: 
+        directiveName: If
+        directiveSource: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: script:this.samplesCount() === 0
+        ↓Placeholder [ngx.components.UIDynamicElement-1762010000171]: 
+          beanData: '{"ionBean":"TextItem","Wrap":"plain:true"}'
+          tagName: ion-text
+          ↓AttrColor [ngx.components.UIAttribute-1762010000173]: 
+            attrName: color
+            attrValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: plain:medium
+          ↓Text [ngx.components.UIText-1762010000175]: 
+            textValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: plain:Waiting for the first metrics sample...
+  ↓InsightsCard [ngx.components.UIDynamicElement-1762010000177]: 
+    beanData: '{"ionBean":"Card"}'
+    tagName: ion-card
+    ↓CardHeader [ngx.components.UIDynamicElement-1762010000179]: 
+      beanData: '{"ionBean":"CardHeader"}'
+      tagName: ion-card-header
+      ↓CardTitle [ngx.components.UIDynamicElement-1762010000181]: 
+        beanData: '{"ionBean":"CardTitle"}'
+        tagName: ion-card-title
+        ↓Text [ngx.components.UIText-1762010000183]: 
+          textValue: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+              - MobileSmartSourceType: plain:Insights
+      ↓CardSubTitle [ngx.components.UIDynamicElement-1762010000185]: 
+        beanData: '{"ionBean":"CardSubTitle"}'
+        tagName: ion-card-subtitle
+        ↓Text [ngx.components.UIText-1762010000187]: 
+          textValue: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+              - MobileSmartSourceType: plain:Operational summary
+    ↓CardContent [ngx.components.UIDynamicElement-1762010000189]: 
+      beanData: '{"ionBean":"CardContent"}'
+      tagName: ion-card-content
+      ↓List [ngx.components.UIDynamicElement-1762010000191]: 
+        beanData: '{"ionBean":"List"}'
+        tagName: ion-list
+        ↓UsageItem [ngx.components.UIDynamicElement-1762010000193]: 
+          beanData: '{"ionBean":"ListItem","Lines":"plain:none"}'
+          tagName: ion-item
+          ↓Label [ngx.components.UIDynamicElement-1762010000195]: 
+            beanData: '{"ionBean":"Label"}'
+            tagName: ion-label
+            ↓TagTitle [ngx.components.UIElement-1762010000197]: 
+              tagName: h3
+              ↓Text [ngx.components.UIText-1762010000199]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Heap usage
+            ↓TagContent [ngx.components.UIElement-1762010000201]: 
+              tagName: p
+              ↓Text [ngx.components.UIText-1762010000203]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: script:this.usageSummary()
+        ↓ChangeItem [ngx.components.UIDynamicElement-1762010000205]: 
+          beanData: '{"ionBean":"ListItem","Lines":"plain:none"}'
+          tagName: ion-item
+          ↓Label [ngx.components.UIDynamicElement-1762010000207]: 
+            beanData: '{"ionBean":"Label"}'
+            tagName: ion-label
+            ↓TagTitle [ngx.components.UIElement-1762010000209]: 
+              tagName: h3
+              ↓Text [ngx.components.UIText-1762010000211]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Recent change
+            ↓TagContent [ngx.components.UIElement-1762010000213]: 
+              tagName: p
+              ↓Text [ngx.components.UIText-1762010000215]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:''Used '' + this.formatDelta(''used'') + '' · Committed '' + this.formatDelta(''committed'')'
+        ↓SamplesItem [ngx.components.UIDynamicElement-1762010000217]: 
+          beanData: '{"ionBean":"ListItem","Lines":"plain:none"}'
+          tagName: ion-item
+          ↓Label [ngx.components.UIDynamicElement-1762010000219]: 
+            beanData: '{"ionBean":"Label"}'
+            tagName: ion-label
+            ↓TagTitle [ngx.components.UIElement-1762010000221]: 
+              tagName: h3
+              ↓Text [ngx.components.UIText-1762010000223]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Samples
+            ↓TagContent [ngx.components.UIElement-1762010000225]: 
+              tagName: p
+              ↓Text [ngx.components.UIText-1762010000227]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:this.samplesCountLabel() + '' · '' + this.samplesWindowLabel()'
+        ↓RefreshItem [ngx.components.UIDynamicElement-1762010000229]: 
+          beanData: '{"ionBean":"ListItem","Lines":"plain:none"}'
+          tagName: ion-item
+          ↓Label [ngx.components.UIDynamicElement-1762010000231]: 
+            beanData: '{"ionBean":"Label"}'
+            tagName: ion-label
+            ↓TagTitle [ngx.components.UIElement-1762010000233]: 
+              tagName: h3
+              ↓Text [ngx.components.UIText-1762010000235]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:Refresh cadence
+            ↓TagContent [ngx.components.UIElement-1762010000237]: 
+              tagName: p
+              ↓Text [ngx.components.UIText-1762010000239]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: 'script:this.refreshRateLabel() + '' ('' + this.refreshRateValue() + '')'''
 ↓Footer [ngx.components.UIDynamicElement-1491634242460]: 
   beanData: '{"ionBean":"Footer"}'
   comment: Page footer
@@ -191,25 +788,31 @@ title: First page
   ↓ToolBar [ngx.components.UIDynamicElement-1491634317538]: 
     beanData: '{"ionBean":"ToolBar"}'
     tagName: ion-toolbar
-    ↓ButtonSet [ngx.components.UIDynamicElement-1588170246138]: 
-      beanData: '{"ionBean":"ButtonSet","SetPosition":"plain:start"}'
-      tagName: ion-buttons
-      ↓Button1 [ngx.components.UIDynamicElement-1491634332730]: 
-        beanData: '{"ionBean":"Button"}'
-        tagName: ion-button
-        ↓Text [ngx.components.UIText-1491634340354]: 
-          textValue: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-              - MobileSmartSourceType: plain:Action 1
-    ↓ButtonSet1 [ngx.components.UIDynamicElement-1588170269871]: 
-      beanData: '{"ionBean":"ButtonSet","SetPosition":"plain:end"}'
-      tagName: ion-buttons
-      ↓Button2 [ngx.components.UIDynamicElement-1491634376874]: 
-        beanData: '{"ionBean":"Button"}'
-        tagName: ion-button
-        ↓Text [ngx.components.UIText-1491634383107]: 
-          textValue: 
-            - xmlizable: 
-              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-              - MobileSmartSourceType: plain:Action 2
+    ↓NoteRefresh [ngx.components.UIDynamicElement-1762010000241]: 
+      beanData: '{"ionBean":"Note"}'
+      tagName: ion-note
+      ↓AttrSlot [ngx.components.UIAttribute-1762010000243]: 
+        attrName: slot
+        attrValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: plain:start
+      ↓Text [ngx.components.UIText-1762010000245]: 
+        textValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: script:this.refreshRateLabel()
+    ↓NoteUpdated [ngx.components.UIDynamicElement-1762010000247]: 
+      beanData: '{"ionBean":"Note"}'
+      tagName: ion-note
+      ↓AttrSlot [ngx.components.UIAttribute-1762010000249]: 
+        attrName: slot
+        attrValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: plain:end
+      ↓Text [ngx.components.UIText-1762010000251]: 
+        textValue: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: script:this.formatLastUpdateLabel()
