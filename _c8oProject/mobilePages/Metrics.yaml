@@ -13,138 +13,229 @@ scriptContent:
         /*Begin_c8o_PageConstructor*/
         		/*End_c8o_PageConstructor*/
         /*Begin_c8o_PageFunction*/
-        	public formatMemory(value){
+        	public formatMemory(value) {
         		if (value === null || value === undefined) {
         			return ''n/a'';
         		}
         		return value >= 1024 ? (value / 1024).toFixed(2) + '' GB'' : value.toFixed(2) + '' MB'';
         	}
-        	
+        
         	public formatLegend = (seriesName: string, opts: any) => {
         		const series = opts?.w?.globals?.series?.[opts.seriesIndex];
         		const last = Array.isArray(series) && series.length ? series[series.length - 1] : null;
         		return last == null ? seriesName : `${seriesName} · ${this.formatMemory(last)}`;
         	};
-        	
+        
         	public latestPoint(): any {
         		const history = Array.isArray(this.global.metricsHistory) ? this.global.metricsHistory : [];
         		return history.length ? history[history.length - 1] : null;
         	}
-        	
+        
         	public previousPoint(): any {
         		const history = Array.isArray(this.global.metricsHistory) ? this.global.metricsHistory : [];
         		return history.length > 1 ? history[history.length - 2] : null;
         	}
-        	
+        
         	public latestField(field: string): number | null {
         		const latest = this.latestPoint();
-        		if (!latest || typeof latest[field] !== 'number' || isNaN(latest[field])) {
+        		if (!latest || typeof latest[field] !== ''number'' || isNaN(latest[field])) {
         			return null;
         		}
         		return latest[field];
         	}
-        	
+        
         	public previousField(field: string): number | null {
         		const previous = this.previousPoint();
-        		if (!previous || typeof previous[field] !== 'number' || isNaN(previous[field])) {
+        		if (!previous || typeof previous[field] !== ''number'' || isNaN(previous[field])) {
         			return null;
         		}
         		return previous[field];
         	}
-        	
+        
         	public formatSampleTime(): string {
-        		const timestamp = this.latestPoint() && typeof this.latestPoint().x === 'number' ? this.latestPoint().x : null;
+        		const timestamp = this.latestPoint() && typeof this.latestPoint().x === ''number'' ? this.latestPoint().x : null;
         		if (timestamp == null) {
-        			return 'Awaiting first sample';
+        			return ''Awaiting first sample'';
         		}
         		const date = new Date(timestamp);
         		if (isNaN(date.getTime())) {
-        			return 'Invalid timestamp';
+        			return ''Invalid timestamp'';
         		}
-        		const pad = (value: number) => value < 10 ? '0' + value : value.toString();
-        		return pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds());
+        		const pad = (value: number) => value < 10 ? ''0'' + value : value.toString();
+        		return pad(date.getHours()) + '':'' + pad(date.getMinutes()) + '':'' + pad(date.getSeconds());
         	}
-        	
+        
         	public usagePercent(): string {
-        		const used = this.latestField('used');
-        		const max = this.latestField('max');
+        		const used = this.latestField(''used'');
+        		const max = this.latestField(''max'');
         		if (used == null || max == null || max <= 0) {
-        			return 'n/a';
+        			return ''n/a'';
         		}
-        		return ((used / max) * 100).toFixed(1) + ' %';
+        		return ((used / max) * 100).toFixed(1) + '' %'';
         	}
-        	
+        
         	public usageSummary(): string {
-        		const used = this.latestField('used');
-        		const max = this.latestField('max');
+        		const used = this.latestField(''used'');
+        		const max = this.latestField(''max'');
         		if (used == null && max == null) {
-        			return 'No memory data';
+        			return ''No memory data'';
         		}
         		if (used == null) {
-        			return 'Used · n/a';
+        			return ''Used · n/a'';
         		}
         		if (max == null) {
-        			return 'Used · ' + this.formatMemory(used);
+        			return ''Used · '' + this.formatMemory(used);
         		}
-        		return this.formatMemory(used) + ' / ' + this.formatMemory(max);
+        		return this.formatMemory(used) + '' / '' + this.formatMemory(max);
         	}
-        	
+        
         	public formatDelta(field: string): string {
         		const latest = this.latestField(field);
         		const previous = this.previousField(field);
         		if (latest == null || previous == null) {
-        			return 'n/a';
+        			return ''n/a'';
         		}
         		const delta = latest - previous;
         		if (!isFinite(delta) || Math.abs(delta) < 0.01) {
-        			return '+/-0 MB';
+        			return ''+/-0 MB'';
         		}
-        		const prefix = delta > 0 ? '+' : '''';
-        		return prefix + delta.toFixed(2) + ' MB';
+        		const prefix = delta > 0 ? ''+'' : '''';
+        		return prefix + delta.toFixed(2) + '' MB'';
         	}
-        	
+        
         	public samplesCount(): number {
         		const history = Array.isArray(this.global.metricsHistory) ? this.global.metricsHistory : [];
         		return history.length;
         	}
-        	
+        
         	public samplesCountLabel(): string {
         		const count = this.samplesCount();
-        		return count ? count + ' samples collected' : 'No samples yet';
+        		return count ? count + '' samples collected'' : ''No samples yet'';
         	}
-        	
+        
         	public samplesWindowLabel(): string {
         		const limit = Number(this.global.metricsMaxPoints);
-        		return limit > 0 ? 'Window · ' + limit + ' points' : 'Window size unavailable';
+        		return limit > 0 ? ''Window · '' + limit + '' points'' : ''Window size unavailable'';
         	}
-        	
+        
         	public refreshRateValue(): string {
         		const delay = Number(this.global.refreshMetrics);
         		if (!delay || delay <= 0) {
-        			return '--';
+        			return ''--'';
         		}
         		if (delay >= 1000) {
         			const seconds = delay / 1000;
-        			return seconds % 1 === 0 ? seconds.toFixed(0) + ' s' : seconds.toFixed(1) + ' s';
+        			return seconds % 1 === 0 ? seconds.toFixed(0) + '' s'' : seconds.toFixed(1) + '' s'';
         		}
-        		return delay.toFixed(0) + ' ms';
+        		return delay.toFixed(0) + '' ms'';
         	}
-        	
+        
+        	public snapshot(): any {
+        		return (this.global && this.global.metricsSnapshot) ? this.global.metricsSnapshot : (this.global && this.global.metrics ? this.global.metrics : {});
+        	}
         	public refreshRateLabel(): string {
         		const delay = Number(this.global.refreshMetrics);
-        		return delay > 0 ? 'Auto refresh enabled' : 'Refresh cadence unavailable';
+        		return delay > 0 ? ''Auto refresh enabled'' : ''Refresh cadence unavailable'';
         	}
-        	
+        	public latestCpuProcess(): number | null {
+        		const history = Array.isArray(this.global.metricsHistory) ? this.global.metricsHistory : [];
+        		if (history.length) {
+        			const point = history[history.length - 1];
+        			if (point && point.cpuProcess != null) {
+        				return point.cpuProcess;
+        			}
+        		}
+        		const threads = this.snapshot().threads || {};
+        		return typeof threads.processCpuLoad === ''number'' ? threads.processCpuLoad : null;
+        	}
+        	public latestCpuSystem(): number | null {
+        		const history = Array.isArray(this.global.metricsHistory) ? this.global.metricsHistory : [];
+        		if (history.length) {
+        			const point = history[history.length - 1];
+        			if (point && point.cpuSystem != null) {
+        				return point.cpuSystem;
+        			}
+        		}
+        		const threads = this.snapshot().threads || {};
+        		return typeof threads.systemCpuLoad === ''number'' ? threads.systemCpuLoad : null;
+        	}
+        	public latestCpuContainer(): number | null {
+        		const history = Array.isArray(this.global.metricsHistory) ? this.global.metricsHistory : [];
+        		if (history.length) {
+        			const point = history[history.length - 1];
+        			if (point && point.cpuContainer != null) {
+        				return point.cpuContainer;
+        			}
+        		}
+        		const threads = this.snapshot().threads || {};
+        		return typeof threads.containerCpuLoad === ''number'' ? threads.containerCpuLoad : null;
+        	}
+        	public cpuSeries(): any[] {
+        		return Array.isArray(this.global.metricsCpuSeries) ? this.global.metricsCpuSeries : [];
+        	}
+        	public hasCpuSeries(): boolean {
+        		const series = this.cpuSeries();
+        		for (const entry of series) {
+        			const data = entry && Array.isArray(entry.data) ? entry.data : [];
+        			for (const point of data) {
+        				if (point && typeof point.y === ''number'' && !isNaN(point.y)) {
+        					return true;
+        				}
+        			}
+        		}
+        		return false;
+        	}
+        	public formatCpuPercent(value: number | null): string {
+        		if (value == null || isNaN(value) || value < 0) {
+        			return ''n/a'';
+        		}
+        		const clamped = Math.max(0, value);
+        		return (clamped * 100).toFixed(1) + '' %'';
+        	}
+        	public cpuSummaryLabel(): string {
+        		const value = this.latestCpuProcess();
+        		return value == null ? ''Process CPU unavailable'' : ''Process load · '' + this.formatCpuPercent(value);
+        	}
+        	public cpuSystemLabel(): string {
+        		const container = this.latestCpuContainer();
+        		if (container != null) {
+        			return ''Container load · '' + this.formatCpuPercent(container);
+        		}
+        		const system = this.latestCpuSystem();
+        		return system == null ? ''Host CPU unavailable'' : ''Host load · '' + this.formatCpuPercent(system);
+        	}
+        	public formatCpuAxis = (value: number): string => {
+        		if (typeof value !== ''number'' || isNaN(value)) {
+        			return '''';
+        		}
+        		const fixed = value >= 10 ? value.toFixed(0) : value.toFixed(1);
+        		return fixed + '' %'';
+        	};
+        	public formatCpuTooltip = (value: number): string => {
+        		if (typeof value !== ''number'' || isNaN(value)) {
+        			return ''n/a'';
+        		}
+        		return value.toFixed(2) + '' %'';
+        	};
+        	public formatCpuLegend = (seriesName: string, opts: any): string => {
+        		const series = opts?.w?.globals?.series?.[opts.seriesIndex];
+        		const last = Array.isArray(series) && series.length ? series[series.length - 1] : null;
+        		return last == null ? seriesName : `${seriesName} · ${this.formatCpuAxis(last)}`;
+        	};
+        	public cpuCardSubtitle(): string {
+        		return this.hasCpuSeries() ? this.samplesCountLabel() + '' · '' + this.samplesWindowLabel() : ''Awaiting CPU metrics'';
+        	}
+        
         	public formatLastUpdateLabel(): string {
         		const latest = this.latestPoint();
-        		if (!latest || typeof latest.x !== 'number') {
-        			return 'Last update · awaiting data';
+        		if (!latest || typeof latest.x !== ''number'') {
+        			return ''Last update · awaiting data'';
         		}
         		const date = new Date(latest.x);
         		if (isNaN(date.getTime())) {
-        			return 'Last update · invalid timestamp';
+        			return ''Last update · invalid timestamp'';
         		}
-        		return 'Last update · ' + date.toLocaleString();
+        		return ''Last update · '' + date.toLocaleString();
         	}
         	/*End_c8o_PageFunction*/
         '
@@ -250,7 +341,7 @@ title: Metrics dashboard
                 textValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:this.formatMemory(this.latestField(''used''))'
+                    - MobileSmartSourceType: script:this.formatMemory(this.latestField('used'))
             ↓DeltaUsed [ngx.components.UIDynamicElement-1762010000035]: 
               beanData: '{"ionBean":"Note"}'
               tagName: ion-note
@@ -264,7 +355,7 @@ title: Metrics dashboard
                 textValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:''Delta '' + this.formatDelta(''used'')'
+                    - MobileSmartSourceType: script:'Delta ' + this.formatDelta('used')
           ↓ColCommitted [ngx.components.UIElement-1762010000041]: 
             tagName: ion-col
             ↓AttrSize [ngx.components.UIAttribute-1762010000043]: 
@@ -299,7 +390,7 @@ title: Metrics dashboard
                 textValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:this.formatMemory(this.latestField(''committed''))'
+                    - MobileSmartSourceType: script:this.formatMemory(this.latestField('committed'))
             ↓DeltaCommitted [ngx.components.UIDynamicElement-1762010000057]: 
               beanData: '{"ionBean":"Note"}'
               tagName: ion-note
@@ -313,7 +404,7 @@ title: Metrics dashboard
                 textValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:''Delta '' + this.formatDelta(''committed'')'
+                    - MobileSmartSourceType: script:'Delta ' + this.formatDelta('committed')
           ↓ColMax [ngx.components.UIElement-1762010000063]: 
             tagName: ion-col
             ↓AttrSize [ngx.components.UIAttribute-1762010000065]: 
@@ -348,7 +439,7 @@ title: Metrics dashboard
                 textValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:this.formatMemory(this.latestField(''max''))'
+                    - MobileSmartSourceType: script:this.formatMemory(this.latestField('max'))
             ↓DeltaMax [ngx.components.UIDynamicElement-1762010000079]: 
               beanData: '{"ionBean":"Note"}'
               tagName: ion-note
@@ -362,7 +453,7 @@ title: Metrics dashboard
                 textValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:''Delta '' + this.formatDelta(''max'')'
+                    - MobileSmartSourceType: script:'Delta ' + this.formatDelta('max')
         ↓RowSecondary [ngx.components.UIElement-1762010000085]: 
           tagName: ion-row
           ↓ColUsage [ngx.components.UIElement-1762010000087]: 
@@ -414,6 +505,69 @@ title: Metrics dashboard
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
                     - MobileSmartSourceType: script:this.usageSummary()
+          ↓ColCpu [ngx.components.UIElement-1762013000101]: 
+            tagName: ion-col
+            ↓AttrSize [ngx.components.UIAttribute-1762013000103]: 
+              attrName: size
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:12
+            ↓AttrSizeMd [ngx.components.UIAttribute-1762013000105]: 
+              attrName: size-md
+              attrValue: 
+                - xmlizable: 
+                  - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                  - MobileSmartSourceType: plain:4
+            ↓LabelCpu [ngx.components.UIDynamicElement-1762013000107]: 
+              beanData: '{"ionBean":"TextItem"}'
+              tagName: ion-text
+              ↓AttrColor [ngx.components.UIAttribute-1762013000109]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:medium
+              ↓Text [ngx.components.UIText-1762013000111]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:CPU usage
+            ↓ValueCpu [ngx.components.UIElement-1762013000113]: 
+              tagName: h2
+              ↓Text [ngx.components.UIText-1762013000115]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: script:this.formatCpuPercent(this.latestCpuProcess())
+            ↓NoteCpu [ngx.components.UIDynamicElement-1762013000117]: 
+              beanData: '{"ionBean":"Note"}'
+              tagName: ion-note
+              ↓AttrColor [ngx.components.UIAttribute-1762013000119]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:medium
+              ↓Text [ngx.components.UIText-1762013000121]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: script:this.cpuSummaryLabel()
+            ↓NoteCpuSystem [ngx.components.UIDynamicElement-1762013000123]: 
+              beanData: '{"ionBean":"Note"}'
+              tagName: ion-note
+              ↓AttrColor [ngx.components.UIAttribute-1762013000125]: 
+                attrName: color
+                attrValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: plain:light
+              ↓Text [ngx.components.UIText-1762013000127]: 
+                textValue: 
+                  - xmlizable: 
+                    - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                    - MobileSmartSourceType: script:this.cpuSystemLabel()
           ↓ColSamples [ngx.components.UIElement-1762010000109]: 
             tagName: ion-col
             ↓AttrSize [ngx.components.UIAttribute-1762010000111]: 
@@ -660,7 +814,7 @@ title: Metrics dashboard
             - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
             - MobileSmartSourceType: script:this.samplesCount() === 0
         ↓Placeholder [ngx.components.UIDynamicElement-1762010000171]: 
-          beanData: '{"ionBean":"TextItem","Wrap":"plain:true"}'
+          beanData: '{"ionBean":"TextItem"}'
           tagName: ion-text
           ↓AttrColor [ngx.components.UIAttribute-1762010000173]: 
             attrName: color
@@ -673,6 +827,155 @@ title: Metrics dashboard
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
                 - MobileSmartSourceType: plain:Waiting for the first metrics sample...
+  ↓CpuChartCard [ngx.components.UIDynamicElement-1762015000201]: 
+    beanData: '{"ionBean":"Card"}'
+    tagName: ion-card
+    ↓CardHeader [ngx.components.UIDynamicElement-1762015000203]: 
+      beanData: '{"ionBean":"CardHeader"}'
+      tagName: ion-card-header
+      ↓CardTitle [ngx.components.UIDynamicElement-1762015000205]: 
+        beanData: '{"ionBean":"CardTitle"}'
+        tagName: ion-card-title
+        ↓Text [ngx.components.UIText-1762015000207]: 
+          textValue: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+              - MobileSmartSourceType: plain:CPU history
+      ↓CardSubTitle [ngx.components.UIDynamicElement-1762015000209]: 
+        beanData: '{"ionBean":"CardSubTitle"}'
+        tagName: ion-card-subtitle
+        ↓Text [ngx.components.UIText-1762015000211]: 
+          textValue: 
+            - xmlizable: 
+              - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+              - MobileSmartSourceType: script:this.cpuCardSubtitle()
+    ↓CardContent [ngx.components.UIDynamicElement-1762015000213]: 
+      beanData: '{"ionBean":"CardContent"}'
+      tagName: ion-card-content
+      ↓DirectiveChart [ngx.components.UIControlDirective-1762015000215]: 
+        directiveName: If
+        directiveSource: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: script:this.hasCpuSeries()
+        ↓UseSharedComponent [ngx.components.UIUseShared-1762015000217]: 
+          identifier: cpu
+          sharedcomponent: libApexCharts.Application.NgxApp.apxChart
+          ↓chart [ngx.components.UIUseVariable-1762015000219]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ type: ''line'', height: 320, animations: { enabled: false }, zoom: { enabled: false }, toolbar: { show: false } }'
+          ↓annotations [ngx.components.UIUseVariable-1762015000221]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓colors [ngx.components.UIUseVariable-1762015000223]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:[''#fa5252'', ''#1e88e5'', ''#20c997'']'
+          ↓dataLabels [ngx.components.UIUseVariable-1762015000225]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ enabled: false }'
+          ↓series [ngx.components.UIUseVariable-1762015000227]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:this.cpuSeries()
+          ↓stroke [ngx.components.UIUseVariable-1762015000229]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ curve: ''smooth'', width: [2, 2, 2] }'
+          ↓labels [ngx.components.UIUseVariable-1762015000231]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓legend [ngx.components.UIUseVariable-1762015000233]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ position: ''top'', formatter: this.formatCpuLegend }'
+          ↓fill [ngx.components.UIUseVariable-1762015000235]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ type: ''solid'', opacity: 1 }'
+          ↓tooltip [ngx.components.UIUseVariable-1762015000237]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ x: { format: ''HH:mm:ss'' }, y: { formatter: this.formatCpuTooltip } }'
+          ↓plotOptions [ngx.components.UIUseVariable-1762015000239]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓responsive [ngx.components.UIUseVariable-1762015000241]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓xaxis [ngx.components.UIUseVariable-1762015000243]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ type: ''datetime'', labels: { format: ''HH:mm:ss'' } }'
+          ↓yaxis [ngx.components.UIUseVariable-1762015000245]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:[{ min: 0, max: 100, tickAmount: 5, labels: { formatter: this.formatCpuAxis } }]'
+          ↓grid [ngx.components.UIUseVariable-1762015000247]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: 'script:{ strokeDashArray: 2, borderColor: ''#e9ecef'' }'
+          ↓states [ngx.components.UIUseVariable-1762015000249]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓title [ngx.components.UIUseVariable-1762015000251]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓subtitle [ngx.components.UIUseVariable-1762015000253]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+          ↓theme [ngx.components.UIUseVariable-1762015000255]: 
+            varValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:null
+      ↓DirectiveEmpty [ngx.components.UIControlDirective-1762015000257]: 
+        directiveName: If
+        directiveSource: 
+          - xmlizable: 
+            - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+            - MobileSmartSourceType: script:!this.hasCpuSeries()
+        ↓Placeholder [ngx.components.UIDynamicElement-1762015000259]: 
+          beanData: '{"ionBean":"TextItem"}'
+          tagName: ion-text
+          ↓AttrColor [ngx.components.UIAttribute-1762015000261]: 
+            attrName: color
+            attrValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: plain:medium
+          ↓Text [ngx.components.UIText-1762015000263]: 
+            textValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: plain:Waiting for CPU metrics...
   ↓InsightsCard [ngx.components.UIDynamicElement-1762010000177]: 
     beanData: '{"ionBean":"Card"}'
     tagName: ion-card
@@ -740,7 +1043,7 @@ title: Metrics dashboard
                 textValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:''Used '' + this.formatDelta(''used'') + '' · Committed '' + this.formatDelta(''committed'')'
+                    - MobileSmartSourceType: script:'Used ' + this.formatDelta('used') + ' · Committed ' + this.formatDelta('committed')
         ↓SamplesItem [ngx.components.UIDynamicElement-1762010000217]: 
           beanData: '{"ionBean":"ListItem","Lines":"plain:none"}'
           tagName: ion-item
@@ -760,7 +1063,7 @@ title: Metrics dashboard
                 textValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:this.samplesCountLabel() + '' · '' + this.samplesWindowLabel()'
+                    - MobileSmartSourceType: script:this.samplesCountLabel() + ' · ' + this.samplesWindowLabel()
         ↓RefreshItem [ngx.components.UIDynamicElement-1762010000229]: 
           beanData: '{"ionBean":"ListItem","Lines":"plain:none"}'
           tagName: ion-item
@@ -780,7 +1083,7 @@ title: Metrics dashboard
                 textValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:this.refreshRateLabel() + '' ('' + this.refreshRateValue() + '')'''
+                    - MobileSmartSourceType: script:this.refreshRateLabel() + ' (' + this.refreshRateValue() + ')'
 ↓Footer [ngx.components.UIDynamicElement-1491634242460]: 
   beanData: '{"ionBean":"Footer"}'
   comment: Page footer

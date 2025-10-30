@@ -110,12 +110,12 @@ Describes the mobile application global properties
 <details><summary><span style="color:DarkGoldenRod"><i>Pages</i></span></summary><blockquote><p>
 
 
-<details><summary><b>Metrics</b> : My First Page as root page</summary><blockquote><p>
+<details><summary><b>Metrics</b> : Metrics dashboard root page</summary><blockquote><p>
 
 
 ### ![](https://github.com/convertigo/convertigo/blob/develop/engine/src/com/twinsoft/convertigo/beans/ngx/components/images/pagecomponent_color_16x16.png?raw=true "PageComponent") Metrics
 
-My First Page as root page
+Metrics dashboard root page
 </p></blockquote></details>
 
 <details><summary><b>ThreadDetails</b> : Detailed view of a single JVM thread</summary><blockquote><p>

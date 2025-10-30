@@ -275,7 +275,7 @@ title: Threads
           textValue: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-              - MobileSmartSourceType: 'script:''Snapshot · '' + this.formatTimestamp(this.snapshot().capturedAt)'
+              - MobileSmartSourceType: script:'Snapshot · ' + this.formatTimestamp(this.snapshot().capturedAt)
     ↓CardContent [ngx.components.UIDynamicElement-1762012000013]: 
       beanData: '{"ionBean":"CardContent"}'
       tagName: ion-card-content
@@ -298,7 +298,7 @@ title: Threads
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
                   - MobileSmartSourceType: plain:3
             ↓Label [ngx.components.UIDynamicElement-1762012000025]: 
-              beanData: '{"ionBean":"TextItem","Wrap":"plain:true"}'
+              beanData: '{"ionBean":"TextItem"}'
               tagName: ion-text
               ↓Text [ngx.components.UIText-1762012000027]: 
                 textValue: 
@@ -311,7 +311,7 @@ title: Threads
                 textValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:this.formatCount(this.snapshotNumber("totalThreads"))'
+                    - MobileSmartSourceType: script:this.formatCount(this.snapshotNumber("totalThreads"))
           ↓MatchedCol [ngx.components.UIElement-1762012000033]: 
             tagName: ion-col
             ↓AttrSize [ngx.components.UIAttribute-1762012000035]: 
@@ -327,7 +327,7 @@ title: Threads
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
                   - MobileSmartSourceType: plain:3
             ↓Label [ngx.components.UIDynamicElement-1762012000039]: 
-              beanData: '{"ionBean":"TextItem","Wrap":"plain:true"}'
+              beanData: '{"ionBean":"TextItem"}'
               tagName: ion-text
               ↓Text [ngx.components.UIText-1762012000041]: 
                 textValue: 
@@ -340,7 +340,7 @@ title: Threads
                 textValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:this.formatCount(this.snapshotNumber("matchedThreads"))'
+                    - MobileSmartSourceType: script:this.formatCount(this.snapshotNumber("matchedThreads"))
           ↓DaemonCol [ngx.components.UIElement-1762012000047]: 
             tagName: ion-col
             ↓AttrSize [ngx.components.UIAttribute-1762012000049]: 
@@ -356,7 +356,7 @@ title: Threads
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
                   - MobileSmartSourceType: plain:3
             ↓Label [ngx.components.UIDynamicElement-1762012000053]: 
-              beanData: '{"ionBean":"TextItem","Wrap":"plain:true"}'
+              beanData: '{"ionBean":"TextItem"}'
               tagName: ion-text
               ↓Text [ngx.components.UIText-1762012000055]: 
                 textValue: 
@@ -369,7 +369,7 @@ title: Threads
                 textValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:this.formatCount(this.snapshotNumber("daemonThreads"))'
+                    - MobileSmartSourceType: script:this.formatCount(this.snapshotNumber("daemonThreads"))
           ↓DeadlockedCol [ngx.components.UIElement-1762012000061]: 
             tagName: ion-col
             ↓AttrSize [ngx.components.UIAttribute-1762012000063]: 
@@ -385,7 +385,7 @@ title: Threads
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
                   - MobileSmartSourceType: plain:3
             ↓Label [ngx.components.UIDynamicElement-1762012000067]: 
-              beanData: '{"ionBean":"TextItem","Wrap":"plain:true"}'
+              beanData: '{"ionBean":"TextItem"}'
               tagName: ion-text
               ↓Text [ngx.components.UIText-1762012000069]: 
                 textValue: 
@@ -398,11 +398,11 @@ title: Threads
                 textValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:this.formatCount(this.snapshotNumber("deadlockedThreads"))'
+                    - MobileSmartSourceType: script:this.formatCount(this.snapshotNumber("deadlockedThreads"))
         ↓RowStates [ngx.components.UIElement-1762012000075]: 
           tagName: ion-row
           ↓StatesDirective [ngx.components.UIControlDirective-1762012000077]: 
-            directiveExpression: 'let state of this.stateEntries()'
+            directiveExpression: let state of this.stateEntries()
             directiveIndexName: sIdx
             directiveItemName: state
             ↓StateCol [ngx.components.UIElement-1762012000079]: 
@@ -427,12 +427,12 @@ title: Threads
                   attrValue: 
                     - xmlizable: 
                       - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                      - MobileSmartSourceType: 'script:this.colorForState(state.key)'
+                      - MobileSmartSourceType: script:this.colorForState(state.key)
                 ↓Text [ngx.components.UIText-1762012000089]: 
                   textValue: 
                     - xmlizable: 
                       - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                      - MobileSmartSourceType: 'script:state.label + '' · '' + this.formatCount(state.value)'
+                      - MobileSmartSourceType: script:state.label + ' · ' + this.formatCount(state.value)
         ↓FilterRow [ngx.components.UIElement-1762012000091]: 
           tagName: ion-row
           ↓FilterCol [ngx.components.UIElement-1762012000093]: 
@@ -501,7 +501,7 @@ title: Threads
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
                   - MobileSmartSourceType: plain:4
             ↓Title [ngx.components.UIDynamicElement-1762012000127]: 
-              beanData: '{"ionBean":"TextItem","Wrap":"plain:true"}'
+              beanData: '{"ionBean":"TextItem"}'
               tagName: ion-text
               ↓Text [ngx.components.UIText-1762012000129]: 
                 textValue: 
@@ -512,7 +512,7 @@ title: Threads
               beanData: '{"ionBean":"List"}'
               tagName: ion-list
               ↓Directive [ngx.components.UIControlDirective-1762012000133]: 
-                directiveExpression: 'let entry of this.topCpuThreads(); index as idx'
+                directiveExpression: let entry of this.topCpuThreads(); index as idx
                 directiveIndexName: cIdx
                 directiveItemName: entry
                 ↓Item [ngx.components.UIDynamicElement-1762012000135]: 
@@ -534,9 +534,9 @@ title: Threads
                         textValue: 
                           - xmlizable: 
                             - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                            - MobileSmartSourceType: 'script:''CPU '' + this.formatMillis(entry && entry.cpuTimeMillis)'
+                            - MobileSmartSourceType: script:'CPU ' + this.formatMillis(entry && entry.cpuTimeMillis)
                   ↓StateBadge [ngx.components.UIDynamicElement-1762012000147]: 
-                    beanData: '{"ionBean":"Badge","Color":"script:this.colorForState(entry && entry.state)"}'
+                    beanData: '{"ionBean":"Badge"}'
                     tagName: ion-badge
                     ↓Text [ngx.components.UIText-1762012000149]: 
                       textValue: 
@@ -548,7 +548,7 @@ title: Threads
                 directiveSource: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:!this.topCpuThreads().length'
+                    - MobileSmartSourceType: script:!this.topCpuThreads().length
                 ↓Item [ngx.components.UIDynamicElement-1762012000153]: 
                   beanData: '{"ionBean":"ListItem","Lines":"plain:none"}'
                   tagName: ion-item
@@ -575,7 +575,7 @@ title: Threads
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
                   - MobileSmartSourceType: plain:4
             ↓Title [ngx.components.UIDynamicElement-1762012000165]: 
-              beanData: '{"ionBean":"TextItem","Wrap":"plain:true"}'
+              beanData: '{"ionBean":"TextItem"}'
               tagName: ion-text
               ↓Text [ngx.components.UIText-1762012000167]: 
                 textValue: 
@@ -586,7 +586,7 @@ title: Threads
               beanData: '{"ionBean":"List"}'
               tagName: ion-list
               ↓Directive [ngx.components.UIControlDirective-1762012000171]: 
-                directiveExpression: 'let entry of this.topWaitThreads(); index as idx'
+                directiveExpression: let entry of this.topWaitThreads(); index as idx
                 directiveIndexName: wIdx
                 directiveItemName: entry
                 ↓Item [ngx.components.UIDynamicElement-1762012000173]: 
@@ -608,9 +608,9 @@ title: Threads
                         textValue: 
                           - xmlizable: 
                             - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                            - MobileSmartSourceType: 'script:''Waited '' + this.formatMillis(entry && entry.waitedTimeMillis)'
+                            - MobileSmartSourceType: script:'Waited ' + this.formatMillis(entry && entry.waitedTimeMillis)
                   ↓StateBadge [ngx.components.UIDynamicElement-1762012000185]: 
-                    beanData: '{"ionBean":"Badge","Color":"script:this.colorForState(entry && entry.state)"}'
+                    beanData: '{"ionBean":"Badge"}'
                     tagName: ion-badge
                     ↓Text [ngx.components.UIText-1762012000187]: 
                       textValue: 
@@ -622,7 +622,7 @@ title: Threads
                 directiveSource: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:!this.topWaitThreads().length'
+                    - MobileSmartSourceType: script:!this.topWaitThreads().length
                 ↓Item [ngx.components.UIDynamicElement-1762012000191]: 
                   beanData: '{"ionBean":"ListItem","Lines":"plain:none"}'
                   tagName: ion-item
@@ -649,7 +649,7 @@ title: Threads
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
                   - MobileSmartSourceType: plain:4
             ↓Title [ngx.components.UIDynamicElement-1762012000203]: 
-              beanData: '{"ionBean":"TextItem","Wrap":"plain:true"}'
+              beanData: '{"ionBean":"TextItem"}'
               tagName: ion-text
               ↓Text [ngx.components.UIText-1762012000205]: 
                 textValue: 
@@ -660,7 +660,7 @@ title: Threads
               beanData: '{"ionBean":"List"}'
               tagName: ion-list
               ↓Directive [ngx.components.UIControlDirective-1762012000209]: 
-                directiveExpression: 'let entry of this.topBlockedThreads(); index as idx'
+                directiveExpression: let entry of this.topBlockedThreads(); index as idx
                 directiveIndexName: bIdx
                 directiveItemName: entry
                 ↓Item [ngx.components.UIDynamicElement-1762012000211]: 
@@ -682,9 +682,9 @@ title: Threads
                         textValue: 
                           - xmlizable: 
                             - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                            - MobileSmartSourceType: 'script:''Blocked '' + this.formatMillis(entry && entry.blockedTimeMillis)'
+                            - MobileSmartSourceType: script:'Blocked ' + this.formatMillis(entry && entry.blockedTimeMillis)
                   ↓StateBadge [ngx.components.UIDynamicElement-1762012000223]: 
-                    beanData: '{"ionBean":"Badge","Color":"script:this.colorForState(entry && entry.state)"}'
+                    beanData: '{"ionBean":"Badge"}'
                     tagName: ion-badge
                     ↓Text [ngx.components.UIText-1762012000225]: 
                       textValue: 
@@ -696,7 +696,7 @@ title: Threads
                 directiveSource: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:!this.topBlockedThreads().length'
+                    - MobileSmartSourceType: script:!this.topBlockedThreads().length
                 ↓Item [ngx.components.UIDynamicElement-1762012000229]: 
                   beanData: '{"ionBean":"ListItem","Lines":"plain:none"}'
                   tagName: ion-item
@@ -756,7 +756,7 @@ title: Threads
             attrValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: 'script:this.sortMode'
+                - MobileSmartSourceType: script:this.sortMode
           ↓Event [ngx.components.UIControlEvent-1762012000259]: 
             attrName: (ionChange)
             eventName: ionChange
@@ -775,7 +775,7 @@ title: Threads
                           resolve();
                       }'
           ↓OptionsDirective [ngx.components.UIControlDirective-1762012000263]: 
-            directiveExpression: 'let option of this.sortOptions()'
+            directiveExpression: let option of this.sortOptions()
             directiveIndexName: optIdx
             directiveItemName: option
             ↓Button [ngx.components.UIDynamicElement-1762012000265]: 
@@ -786,12 +786,12 @@ title: Threads
                 attrValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:option.value'
+                    - MobileSmartSourceType: script:option.value
               ↓Text [ngx.components.UIText-1762012000269]: 
                 textValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:option.label'
+                    - MobileSmartSourceType: script:option.label
   ↓ListContainer [ngx.components.UIDynamicElement-1761575995423]: 
     beanData: '{"ionBean":"List"}'
     tagName: ion-list
@@ -807,7 +807,7 @@ title: Threads
           attrValue: 
             - xmlizable: 
               - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-              - MobileSmartSourceType: 'script:this.threadHeaderColor(thread)'
+              - MobileSmartSourceType: script:this.threadHeaderColor(thread)
         ↓Label [ngx.components.UIDynamicElement-1761575995431]: 
           beanData: '{"ionBean":"Label"}'
           tagName: ion-label
@@ -817,16 +817,16 @@ title: Threads
               textValue: 
                 - xmlizable: 
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                  - MobileSmartSourceType: 'script:this.threadTitle(thread)'
+                  - MobileSmartSourceType: script:this.threadTitle(thread)
           ↓Meta [ngx.components.UIElement-1762012000275]: 
             tagName: p
             ↓Text [ngx.components.UIText-1762012000277]: 
               textValue: 
                 - xmlizable: 
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                  - MobileSmartSourceType: 'script:this.threadSubtitle(thread)'
+                  - MobileSmartSourceType: script:this.threadSubtitle(thread)
           ↓Badges [ngx.components.UIControlDirective-1762012000279]: 
-            directiveExpression: 'let badge of this.threadBadges(thread)'
+            directiveExpression: let badge of this.threadBadges(thread)
             directiveIndexName: badgeIdx
             directiveItemName: badge
             ↓Chip [ngx.components.UIDynamicElement-1762012000281]: 
@@ -837,26 +837,26 @@ title: Threads
                 attrValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:badge.color'
+                    - MobileSmartSourceType: script:badge.color
               ↓Text [ngx.components.UIText-1762012000285]: 
                 textValue: 
                   - xmlizable: 
                     - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                    - MobileSmartSourceType: 'script:badge.label'
+                    - MobileSmartSourceType: script:badge.label
           ↓Metrics [ngx.components.UIElement-1762012000287]: 
             tagName: p
             ↓Text [ngx.components.UIText-1762012000289]: 
               textValue: 
                 - xmlizable: 
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                  - MobileSmartSourceType: 'script:''CPU '' + this.formatMillis(thread && thread.cpuTimeMillis) + '' · User '' + this.formatMillis(thread && thread.userTimeMillis) + '' · Waited '' + this.formatMillis(thread && thread.waitedTimeMillis)'
+                  - MobileSmartSourceType: script:'CPU ' + this.formatMillis(thread && thread.cpuTimeMillis) + ' · User ' + this.formatMillis(thread && thread.userTimeMillis) + ' · Waited ' + this.formatMillis(thread && thread.waitedTimeMillis)
           ↓Locks [ngx.components.UIElement-1762012000291]: 
             tagName: p
             ↓Text [ngx.components.UIText-1762012000293]: 
               textValue: 
                 - xmlizable: 
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                  - MobileSmartSourceType: 'script:''Locks '' + this.formatCount(thread && thread.lockedMonitors) + '' · Blocked '' + this.formatCount(thread && thread.blockedCount)'
+                  - MobileSmartSourceType: script:'Locks ' + this.formatCount(thread && thread.lockedMonitors) + ' · Blocked ' + this.formatCount(thread && thread.blockedCount)
           ↓StackPreview [ngx.components.UIElement-1762012000295]: 
             tagName: pre
             ↓Attr [ngx.components.UIAttribute-1762012000297]: 
@@ -864,12 +864,12 @@ title: Threads
               attrValue: 
                 - xmlizable: 
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                  - MobileSmartSourceType: plain:margin: 8px 0; white-space: pre-wrap;
+                  - MobileSmartSourceType: 'plain:margin: 8px 0; white-space: pre-wrap;'
             ↓Text [ngx.components.UIText-1762012000299]: 
               textValue: 
                 - xmlizable: 
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                  - MobileSmartSourceType: 'script:this.stackPreviewText(thread)'
+                  - MobileSmartSourceType: script:this.stackPreviewText(thread)
         ↓ButtonGroup [ngx.components.UIElement-1762012000301]: 
           tagName: ion-buttons
           ↓AttrSlot [ngx.components.UIAttribute-1762012000303]: 
@@ -879,7 +879,7 @@ title: Threads
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
                 - MobileSmartSourceType: plain:end
           ↓DetailsButton [ngx.components.UIDynamicElement-1761583600001]: 
-            beanData: '{"ionBean":"Button","Fill":"plain:clear"}'
+            beanData: '{"ionBean":"Button"}'
             tagName: ion-button
             ↓Icon [ngx.components.UIDynamicElement-1761583600005]: 
               beanData: '{"ionBean":"Icon","IconName":"plain:arrow-forward"}'
@@ -923,7 +923,7 @@ title: Threads
               ↓NavigateDetails [ngx.components.UIDynamicAction-1761583600011]: 
                 beanData: '{"ionBean":"PushPageAction","page":"plain:ConvertigoMonitor.Application.NgxApp.ThreadDetails"}'
           ↓CopyButton [ngx.components.UIDynamicElement-1762012000305]: 
-            beanData: '{"ionBean":"Button","Fill":"plain:clear"}'
+            beanData: '{"ionBean":"Button"}'
             tagName: ion-button
             ↓Icon [ngx.components.UIDynamicElement-1762012000307]: 
               beanData: '{"ionBean":"Icon","IconName":"plain:copy"}'

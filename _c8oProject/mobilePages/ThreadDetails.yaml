@@ -240,44 +240,44 @@ title: Thread Details
             textValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: 'script:''State · '' + this.detailField(''state'', this.currentThread() && this.currentThread().state || ''unknown'')'
+                - MobileSmartSourceType: script:'State · ' + this.detailField('state', this.currentThread() && this.currentThread().state || 'unknown')
         ↓TagCPU [ngx.components.UIElement-1761583001047]: 
           tagName: p
           ↓Text [ngx.components.UIText-1761583001049]: 
             textValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: 'script:''CPU '' + this.formatMillis(this.detailField(''cpuTimeMillis'', this.currentThread() && this.currentThread().cpuTimeMillis)) + '' · User '' + this.formatMillis(this.detailField(''userTimeMillis'', this.currentThread() && this.currentThread().userTimeMillis))'
+                - MobileSmartSourceType: script:'CPU ' + this.formatMillis(this.detailField('cpuTimeMillis', this.currentThread() && this.currentThread().cpuTimeMillis)) + ' · User ' + this.formatMillis(this.detailField('userTimeMillis', this.currentThread() && this.currentThread().userTimeMillis))
         ↓TagCounts [ngx.components.UIElement-1761583001051]: 
           tagName: p
           ↓Text [ngx.components.UIText-1761583001053]: 
             textValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: 'script:''Blocked '' + this.formatCount(this.detailField(''blockedCount'', this.currentThread() && this.currentThread().blockedCount)) + '' · Waited '' + this.formatCount(this.detailField(''waitedCount'', this.currentThread() && this.currentThread().waitedCount))'
+                - MobileSmartSourceType: script:'Blocked ' + this.formatCount(this.detailField('blockedCount', this.currentThread() && this.currentThread().blockedCount)) + ' · Waited ' + this.formatCount(this.detailField('waitedCount', this.currentThread() && this.currentThread().waitedCount))
         ↓TagTimes [ngx.components.UIElement-1761583001055]: 
           tagName: p
           ↓Text [ngx.components.UIText-1761583001057]: 
             textValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: 'script:''Waited '' + this.formatMillis(this.detailField(''waitedTimeMillis'', this.currentThread() && this.currentThread().waitedTimeMillis)) + '' · Blocked '' + this.formatMillis(this.detailField(''blockedTimeMillis'', this.currentThread() && this.currentThread().blockedTimeMillis))'
+                - MobileSmartSourceType: script:'Waited ' + this.formatMillis(this.detailField('waitedTimeMillis', this.currentThread() && this.currentThread().waitedTimeMillis)) + ' · Blocked ' + this.formatMillis(this.detailField('blockedTimeMillis', this.currentThread() && this.currentThread().blockedTimeMillis))
         ↓TagLock [ngx.components.UIElement-1761583001059]: 
           tagName: p
           ↓Text [ngx.components.UIText-1761583001061]: 
             textValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: 'script:''Lock · '' + this.formatLock(this.detailField(''lockName'', this.currentThread() && this.currentThread().lockName))'
+                - MobileSmartSourceType: script:'Lock · ' + this.formatLock(this.detailField('lockName', this.currentThread() && this.currentThread().lockName))
         ↓TagOwner [ngx.components.UIElement-1761583001063]: 
           tagName: p
           ↓Text [ngx.components.UIText-1761583001065]: 
             textValue: 
               - xmlizable: 
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                - MobileSmartSourceType: 'script:''Owner · '' + this.formatLock(this.detailField(''lockOwnerName'', this.currentThread() && this.currentThread().lockOwnerName))'
+                - MobileSmartSourceType: script:'Owner · ' + this.formatLock(this.detailField('lockOwnerName', this.currentThread() && this.currentThread().lockOwnerName))
         ↓Badges [ngx.components.UIControlDirective-1762012000313]: 
-          directiveExpression: 'let badge of this.summaryBadges()'
+          directiveExpression: let badge of this.summaryBadges()
           directiveIndexName: badgeIdx
           directiveItemName: badge
           ↓Chip [ngx.components.UIDynamicElement-1762012000315]: 
@@ -288,12 +288,12 @@ title: Thread Details
               attrValue: 
                 - xmlizable: 
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                  - MobileSmartSourceType: 'script:badge.color'
+                  - MobileSmartSourceType: script:badge.color
             ↓Text [ngx.components.UIText-1762012000319]: 
               textValue: 
                 - xmlizable: 
                   - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                  - MobileSmartSourceType: 'script:badge.label'
+                  - MobileSmartSourceType: script:badge.label
         ↓TagSnapshot [ngx.components.UIElement-1761583001067]: 
           tagName: p
           ↓Text [ngx.components.UIText-1761583001069]: 
@@ -346,7 +346,7 @@ title: Thread Details
                 - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
                 - MobileSmartSourceType: plain:end
           ↓CopyButton [ngx.components.UIDynamicElement-1762012000325]: 
-            beanData: '{"ionBean":"Button","Fill":"plain:clear"}'
+            beanData: '{"ionBean":"Button"}'
             tagName: ion-button
             ↓Icon [ngx.components.UIDynamicElement-1762012000327]: 
               beanData: '{"ionBean":"Icon","IconName":"plain:copy"}'
@@ -408,7 +408,7 @@ title: Thread Details
                   attrValue: 
                     - xmlizable: 
                       - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-                      - MobileSmartSourceType: plain:white-space: pre-wrap; margin: 0;
+                      - MobileSmartSourceType: 'plain:white-space: pre-wrap; margin: 0;'
                 ↓Text [ngx.components.UIText-1762012000345]: 
                   textValue: 
                     - xmlizable: 

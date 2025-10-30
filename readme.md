@@ -50,7 +50,7 @@ Describes the mobile application global properties
 
 #### Metrics
 
-My First Page as root page
+Metrics dashboard root page
 
 #### ThreadDetails
 

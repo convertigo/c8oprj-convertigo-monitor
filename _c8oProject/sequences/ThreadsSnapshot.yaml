@@ -331,7 +331,7 @@ comment: Returns a detailed snapshot of JVM threads with optional name filtering
           - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
           - SmartType: 
             - ↑mode: JS
-            - →→: stateCounters.containsKey("RUNNABLE") ? stateCounters.get("RUNNABLE").longValue() : 0
+            - →→: 'stateCounters.containsKey("RUNNABLE") ? stateCounters.get("RUNNABLE").longValue() : 0'
     ↓waiting [steps.JsonFieldStep-1762011000009]: 
       key: 
         - xmlizable: 
@@ -345,7 +345,7 @@ comment: Returns a detailed snapshot of JVM threads with optional name filtering
           - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
           - SmartType: 
             - ↑mode: JS
-            - →→: stateCounters.containsKey("WAITING") ? stateCounters.get("WAITING").longValue() : 0
+            - →→: 'stateCounters.containsKey("WAITING") ? stateCounters.get("WAITING").longValue() : 0'
     ↓timedWaiting [steps.JsonFieldStep-1762011000011]: 
       key: 
         - xmlizable: 
@@ -359,7 +359,7 @@ comment: Returns a detailed snapshot of JVM threads with optional name filtering
           - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
           - SmartType: 
             - ↑mode: JS
-            - →→: stateCounters.containsKey("TIMED_WAITING") ? stateCounters.get("TIMED_WAITING").longValue() : 0
+            - →→: 'stateCounters.containsKey("TIMED_WAITING") ? stateCounters.get("TIMED_WAITING").longValue() : 0'
     ↓blocked [steps.JsonFieldStep-1762011000013]: 
       key: 
         - xmlizable: 
@@ -373,7 +373,7 @@ comment: Returns a detailed snapshot of JVM threads with optional name filtering
           - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
           - SmartType: 
             - ↑mode: JS
-            - →→: stateCounters.containsKey("BLOCKED") ? stateCounters.get("BLOCKED").longValue() : 0
+            - →→: 'stateCounters.containsKey("BLOCKED") ? stateCounters.get("BLOCKED").longValue() : 0'
     ↓newState [steps.JsonFieldStep-1762011000015]: 
       key: 
         - xmlizable: 
@@ -387,7 +387,7 @@ comment: Returns a detailed snapshot of JVM threads with optional name filtering
           - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
           - SmartType: 
             - ↑mode: JS
-            - →→: stateCounters.containsKey("NEW") ? stateCounters.get("NEW").longValue() : 0
+            - →→: 'stateCounters.containsKey("NEW") ? stateCounters.get("NEW").longValue() : 0'
     ↓terminated [steps.JsonFieldStep-1762011000017]: 
       key: 
         - xmlizable: 
@@ -401,7 +401,7 @@ comment: Returns a detailed snapshot of JVM threads with optional name filtering
           - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
           - SmartType: 
             - ↑mode: JS
-            - →→: stateCounters.containsKey("TERMINATED") ? stateCounters.get("TERMINATED").longValue() : 0
+            - →→: 'stateCounters.containsKey("TERMINATED") ? stateCounters.get("TERMINATED").longValue() : 0'
   ↓filter [steps.JsonObjectStep-1761314144021]: 
     key: 
       - xmlizable: 
@@ -911,7 +911,7 @@ comment: Returns a detailed snapshot of JVM threads with optional name filtering
                 - ↑classname: com.twinsoft.convertigo.beans.steps.SmartType
                 - SmartType: 
                   - ↑mode: JS
-                  - →→: stackPreviewMap.containsKey(java.lang.Long.valueOf(item.getThreadId())) ? stackPreviewMap.get(java.lang.Long.valueOf(item.getThreadId())) : null
+                  - →→: 'stackPreviewMap.containsKey(java.lang.Long.valueOf(item.getThreadId())) ? stackPreviewMap.get(java.lang.Long.valueOf(item.getThreadId())) : null'
           ↓lockedMonitorsCount [steps.JsonFieldStep-1761314144232]: 
             key: 
               - xmlizable: 

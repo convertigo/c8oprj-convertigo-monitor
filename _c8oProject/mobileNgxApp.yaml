@@ -479,6 +479,13 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
       }'
     ↓refreshMetrics [ngx.components.UIDynamicAction-1761315856805]: 
       beanData: '{"ionBean":"PublishEventAction","topic":"plain:refreshMetrics"}'
+  ↓metricsCpuSeries [ngx.components.UIDynamicAction-1762015000001]: 
+    beanData: |
+      '{
+       "ionBean": "SetGlobalAction",
+       "Property": "plain:metricsCpuSeries",
+       "Value": "script:[]"
+      }'
   ↓metricsMaxPoints [ngx.components.UIDynamicAction-1761557806040]: 
     beanData: |
       '{
@@ -492,6 +499,13 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
        "ionBean": "SetGlobalAction",
        "Property": "plain:metricsHistory",
        "Value": "script:[]"
+      }'
+  ↓metricsSnapshot [ngx.components.UIDynamicAction-1762015000003]: 
+    beanData: |
+      '{
+       "ionBean": "SetGlobalAction",
+       "Property": "plain:metricsSnapshot",
+       "Value": "script:{}"
       }'
   ↓threadsSnapshot [ngx.components.UIDynamicAction-1761571739024]: 
     beanData: |
@@ -552,14 +566,37 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
                   var out = props.out || {};
                   var metrics = out.metrics || {};
                   var memory = metrics.memory || {};
+                  var threads = metrics.threads || {};
                   var heap = memory.heap || {};
                   var timestamp = metrics.timestamp ? new Date(metrics.timestamp).getTime() : Date.now();
+                  var processCpu = threads.processCpuLoad;
+                  if (typeof processCpu === ''number'' && !isNaN(processCpu)) {
+                      processCpu = Math.max(0, parseFloat(processCpu.toFixed(4)));
+                  } else {
+                      processCpu = null;
+                  }
+                  var systemCpu = threads.systemCpuLoad;
+                  if (typeof systemCpu === ''number'' && !isNaN(systemCpu)) {
+                      systemCpu = Math.max(0, parseFloat(systemCpu.toFixed(4)));
+                  } else {
+                      systemCpu = null;
+                  }
+                  var containerCpu = threads.containerCpuLoad;
+                  if (typeof containerCpu === ''number'' && !isNaN(containerCpu)) {
+                      containerCpu = Math.max(0, parseFloat(containerCpu.toFixed(4)));
+                  } else {
+                      containerCpu = null;
+                  }
+                  page.global.metricsSnapshot = metrics;
                   var point = {
                       x: timestamp,
                       init: heap.init != null ? parseFloat((heap.init / (1024 * 1024)).toFixed(2)) : null,
                       used: heap.used != null ? parseFloat((heap.used / (1024 * 1024)).toFixed(2)) : null,
                       committed: heap.committed != null ? parseFloat((heap.committed / (1024 * 1024)).toFixed(2)) : null,
-                      max: heap.max != null ? parseFloat((heap.max / (1024 * 1024)).toFixed(2)) : null
+                      max: heap.max != null ? parseFloat((heap.max / (1024 * 1024)).toFixed(2)) : null,
+                      cpuProcess: processCpu,
+                      cpuSystem: systemCpu,
+                      cpuContainer: containerCpu
                   };
                   var history = Array.isArray(page.global.metricsHistory) ? page.global.metricsHistory.slice() : [];
                   history.push(point);
@@ -574,6 +611,26 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
                       { name: ''committed'', data: history.map(function(p){ return { x: p.x, y: p.committed }; }) },
                       { name: ''max'', data: history.map(function(p){ return { x: p.x, y: p.max }; }) }
                   ];
+                  function buildCpuSeries(label, key) {
+                      if (history.some(function(p){ return typeof p[key] === ''number''; })) {
+                          return {
+                              name: label,
+                              data: history.map(function(p){
+                                  var value = p[key];
+                                  return { x: p.x, y: value != null ? parseFloat((value * 100).toFixed(2)) : null };
+                              })
+                          };
+                      }
+                      return null;
+                  }
+                  var cpuSeries = [];
+                  var processSeries = buildCpuSeries(''Process'', ''cpuProcess'');
+                  if (processSeries) { cpuSeries.push(processSeries); }
+                  var containerSeries = buildCpuSeries(''Container'', ''cpuContainer'');
+                  if (containerSeries) { cpuSeries.push(containerSeries); }
+                  var systemSeries = buildCpuSeries(''Host'', ''cpuSystem'');
+                  if (systemSeries) { cpuSeries.push(systemSeries); }
+                  page.global.metricsCpuSeries = cpuSeries;
               } catch (e) {
                   page.c8o.log.warn(''[MB] UpdateMetrics error'', e);
               } finally {
