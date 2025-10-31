@@ -13,6 +13,15 @@ scriptContent:
         /*Begin_c8o_PageConstructor*/
         		/*End_c8o_PageConstructor*/
         /*Begin_c8o_PageFunction*/
+        	public accessDenied(): boolean {
+        		return !!(this.global && this.global.accessDenied);
+        	}
+        	public accessDeniedMessage(): string {
+        		if (this.global && this.global.accessDeniedMessage) {
+        			return String(this.global.accessDeniedMessage);
+        		}
+        		return ''Authentication required. Please sign in to the Convertigo admin console and retry.'';
+        	}
         	public formatMemory(value) {
         		if (value === null || value === undefined) {
         			return ''n/a'';
@@ -328,6 +337,43 @@ title: Metrics dashboard
   beanData: '{"ionBean":"Content"}'
   comment: Page content
   tagName: ion-content
+  ↓AuthNotice [ngx.components.UIControlDirective-1762020201001]: 
+    directiveName: If
+    directiveSource: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+        - MobileSmartSourceType: script:this.accessDenied()
+    ↓AlertCard [ngx.components.UIDynamicElement-1762020201003]: 
+      beanData: '{"ionBean":"Card"}'
+      tagName: ion-card
+      ↓CardHeader [ngx.components.UIDynamicElement-1762020201005]: 
+        beanData: '{"ionBean":"CardHeader"}'
+        tagName: ion-card-header
+        ↓CardTitle [ngx.components.UIDynamicElement-1762020201007]: 
+          beanData: '{"ionBean":"CardTitle"}'
+          tagName: ion-card-title
+          ↓Text [ngx.components.UIText-1762020201009]: 
+            textValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: plain:Authentication required
+      ↓CardContent [ngx.components.UIDynamicElement-1762020201011]: 
+        beanData: '{"ionBean":"CardContent"}'
+        tagName: ion-card-content
+        ↓Message [ngx.components.UIDynamicElement-1762020201013]: 
+          beanData: '{"ionBean":"TextItem"}'
+          tagName: ion-text
+          ↓AttrColor [ngx.components.UIAttribute-1762020201015]: 
+            attrName: color
+            attrValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: plain:warning
+          ↓Text [ngx.components.UIText-1762020201017]: 
+            textValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:this.accessDeniedMessage()
   ↓OverviewCard [ngx.components.UIDynamicElement-1762010000001]: 
     beanData: '{"ionBean":"Card"}'
     tagName: ion-card

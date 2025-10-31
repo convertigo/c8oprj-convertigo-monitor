@@ -744,6 +744,20 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
        "Property": "plain:themeResolved",
        "Value": "script:''light''"
       }'
+  ↓accessDenied [ngx.components.UIDynamicAction-1762020200001]: 
+    beanData: |
+      '{
+       "ionBean": "SetGlobalAction",
+       "Property": "plain:accessDenied",
+       "Value": "script:false"
+      }'
+  ↓accessDeniedMessage [ngx.components.UIDynamicAction-1762020200003]: 
+    beanData: |
+      '{
+       "ionBean": "SetGlobalAction",
+       "Property": "plain:accessDeniedMessage",
+       "Value": "script:null"
+      }'
   ↓threadsSnapshot [ngx.components.UIDynamicAction-1761571739024]: 
     beanData: |
       '{
@@ -801,6 +815,25 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
               'try {
                   page.c8o.log.debug(''[MB] '' + props.actionFunction + '': '' + props.actionName);
                   var out = props.out || {};
+                  var error = null;
+                  if (props && props.error) {
+                      error = props.error;
+                  }
+                  if (!error && out && out.error) {
+                      error = out.error;
+                  }
+                  if (error && String(error.code) === ''-1'') {
+                      var message = error && error.message ? String(error.message) : ''Authentication required'';
+                      page.global.accessDenied = true;
+                      page.global.accessDeniedMessage = message;
+                      page.global.metricsSnapshot = {};
+                      page.global.metricsHistory = [];
+                      page.global.metricsSeries = [];
+                      page.global.metricsCpuSeries = [];
+                      return;
+                  }
+                  page.global.accessDenied = false;
+                  page.global.accessDeniedMessage = null;
                   var metrics = out.metrics || {};
                   var memory = metrics.memory || {};
                   var threads = metrics.threads || {};
@@ -907,7 +940,27 @@ tplProjectName: mobilebuilder_tpl_8_3_0_ngx
             →: |
               'try {
                   page.c8o.log.debug(''[MB] '' + props.actionFunction + '': '' + props.actionName);
-                  var snapshot = props.out && props.out.snapshot ? props.out.snapshot : {};
+                  var out = props.out || {};
+                  var error = null;
+                  if (props && props.error) {
+                      error = props.error;
+                  }
+                  if (!error && out && out.error) {
+                      error = out.error;
+                  }
+                  if (error && String(error.code) === ''-1'') {
+                      var message = error && error.message ? String(error.message) : ''Authentication required'';
+                      page.global.accessDenied = true;
+                      page.global.accessDeniedMessage = message;
+                      page.global.threadsSnapshot = {};
+                      page.global.threadsHistory = [];
+                      page.global.selectedThread = null;
+                      page.global.threadDetails = null;
+                      return;
+                  }
+                  page.global.accessDenied = false;
+                  page.global.accessDeniedMessage = null;
+                  var snapshot = out && out.snapshot ? out.snapshot : {};
                   if (snapshot && Array.isArray(snapshot.threads)) {
                       var threads = snapshot.threads.slice();
                       threads.sort(function(a, b) {

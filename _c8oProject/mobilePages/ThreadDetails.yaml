@@ -11,6 +11,15 @@ scriptContent:
         /*Begin_c8o_PageConstructor*/
         	/*End_c8o_PageConstructor*/
         /*Begin_c8o_PageFunction*/
+        	public accessDenied(): boolean {
+        		return !!(this.global && this.global.accessDenied);
+        	}
+        	public accessDeniedMessage(): string {
+        		if (this.global && this.global.accessDeniedMessage) {
+        			return String(this.global.accessDeniedMessage);
+        		}
+        		return "Authentication required. Please sign in to the Convertigo admin console and retry.";
+        	}
         	public formatCount(value: any) {
         		if (value === null || value === undefined) { return "n/a"; }
         		try { return Number(value).toLocaleString(); } catch (e) { return String(value); }
@@ -249,7 +258,24 @@ title: Thread Details
                   - com.twinsoft.convertigo.beans.common.FormatedContent: 
                     →: |
                       'try {
-                          var detail = props.out && props.out.detail ? props.out.detail : null;
+                          var out = props.out || {};
+                          var error = null;
+                          if (props && props.error) {
+                              error = props.error;
+                          }
+                          if (!error && out && out.error) {
+                              error = out.error;
+                          }
+                          if (error && String(error.code) === ''-1'') {
+                              var message = error && error.message ? String(error.message) : ''Authentication required'';
+                              page.global.accessDenied = true;
+                              page.global.accessDeniedMessage = message;
+                              page.global.threadDetails = null;
+                              return;
+                          }
+                          page.global.accessDenied = false;
+                          page.global.accessDeniedMessage = null;
+                          var detail = out && out.detail ? out.detail : null;
                           page.global.threadDetails = detail;
                       } catch (refreshErr) {
                           page.c8o.log.warn(''[MB] Refresh thread detail error'', refreshErr);
@@ -286,12 +312,49 @@ title: Thread Details
 ↓Content [ngx.components.UIDynamicElement-1761583001025]: 
   beanData: '{"ionBean":"Content"}'
   tagName: ion-content
+  ↓AuthNotice [ngx.components.UIControlDirective-1762020203001]: 
+    directiveName: If
+    directiveSource: 
+      - xmlizable: 
+        - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+        - MobileSmartSourceType: script:this.accessDenied()
+    ↓AlertCard [ngx.components.UIDynamicElement-1762020203003]: 
+      beanData: '{"ionBean":"Card"}'
+      tagName: ion-card
+      ↓CardHeader [ngx.components.UIDynamicElement-1762020203005]: 
+        beanData: '{"ionBean":"CardHeader"}'
+        tagName: ion-card-header
+        ↓CardTitle [ngx.components.UIDynamicElement-1762020203007]: 
+          beanData: '{"ionBean":"CardTitle"}'
+          tagName: ion-card-title
+          ↓Text [ngx.components.UIText-1762020203009]: 
+            textValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: plain:Authentication required
+      ↓CardContent [ngx.components.UIDynamicElement-1762020203011]: 
+        beanData: '{"ionBean":"CardContent"}'
+        tagName: ion-card-content
+        ↓Message [ngx.components.UIDynamicElement-1762020203013]: 
+          beanData: '{"ionBean":"TextItem"}'
+          tagName: ion-text
+          ↓AttrColor [ngx.components.UIAttribute-1762020203015]: 
+            attrName: color
+            attrValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: plain:warning
+          ↓Text [ngx.components.UIText-1762020203017]: 
+            textValue: 
+              - xmlizable: 
+                - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
+                - MobileSmartSourceType: script:this.accessDeniedMessage()
   ↓DirectiveThread [ngx.components.UIControlDirective-1761583001027]: 
     directiveName: If
     directiveSource: 
       - xmlizable: 
         - ↑classname: com.twinsoft.convertigo.beans.ngx.components.MobileSmartSourceType
-        - MobileSmartSourceType: script:this.global.selectedThread
+        - MobileSmartSourceType: script:!this.accessDenied() && this.global.selectedThread
     ↓CardSummary [ngx.components.UIDynamicElement-1761583001029]: 
       beanData: '{"ionBean":"Card"}'
       tagName: ion-card
