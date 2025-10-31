@@ -29,13 +29,13 @@ For more technical informations : [documentation](./project.md)
      <tr><td>To contribute</td><td>
 
      ```
-     ConvertigoMonitor=git@github.com:convertigo/c8oprj-convertigo-monitor.git:branch=825cb4ecb2b0652261302afb175ee7152ee8090d
+     ConvertigoMonitor=git@github.com:convertigo/c8oprj-convertigo-monitor.git:branch=main
      ```
      </td></tr>
      <tr><td>To simply use</td><td>
 
      ```
-     ConvertigoMonitor=git@github.com:convertigo/c8oprj-convertigo-monitor/archive/825cb4ecb2b0652261302afb175ee7152ee8090d.zip
+     ConvertigoMonitor=git@github.com:convertigo/c8oprj-convertigo-monitor/archive/main.zip
      ```
      </td></tr>
     </table>
